@@ -202,111 +202,13 @@
       ]
     },
     {
-      "id": "GH-83",
-      "title": "[BUG] Vista de horarios base muestra 32 entradas planas sin agrupar",
-      "type": "bug",
-      "priority": 15,
-      "status": "done",
-      "assignedRole": "product-owner",
-      "description": "Imported from GitHub issue #83 in The-Next-Security/TNS_TRACK_DEMO.\nURL: https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/83\nLabels: bug, enhancement, front-end\n\n## Descripción\n\nLa página `/configuracion-horarios-envio` (sección admin de horarios base) muestra **32 ítems individuales** en una lista plana, lo que hace la vista difícil de gestionar.\n\n## Causa raíz\n\nLa tabla `ale_horarios_alerta_canal` tiene **1 fila por combinación** `tipo_alerta × canal × día_semana`. Con los datos actuales:\n- 2 tipos de alerta (Temperatura, Desconexión)\n- × 2 canales (email, push)\n- × 8 días (Lun–Dom + Feriado)\n- = **32 filas**\n\nEl componente `NotificationHorariosEnvio_V...",
-      "definitionOfDone": [
-        "issue imported into local product backlog",
-        "work item reviewed by product-owner",
-        "implementation approach defined",
-        "item ready for sprint selection"
-      ],
-      "source": "github-issue",
-      "repo": "The-Next-Security/TNS_TRACK_DEMO",
-      "issueNumber": 83,
-      "issueUrl": "https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/83",
-      "labels": [
-        "bug",
-        "enhancement",
-        "front-end"
-      ],
-      "updatedAt": "2026-04-03T00:08:34Z"
-    },
-    {
-      "id": "GH-46",
-      "title": "[BUG] Warning Critical dependency en react-datepicker por require() dinámico",
-      "type": "bug",
-      "priority": 16,
-      "status": "done",
-      "assignedRole": "product-owner",
-      "description": "Imported from GitHub issue #46 in The-Next-Security/TNS_TRACK_DEMO.\nURL: https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/46\nLabels: bug, dependencies, front-end, technical-debt\n\n## Idea general\n\n`react-datepicker` usa `require()` dinámico internamente para cargar locales de `date-fns`, lo que webpack 5 reporta como warning \\\"Critical dependency: the request of a dependency is an expression\\\". El `ContextReplacementPlugin` existente para `date-fns/locale` no cubre este caso porque el warning proviene del código interno del paquete.\n\n## Solución temporal aplicada\n\nSe agregó `ignoreWarnings` en `webpack.config.js` para suprimir el warning mientras no se corrija en el paque...",
-      "definitionOfDone": [
-        "issue imported into local product backlog",
-        "work item reviewed by product-owner",
-        "implementation approach defined",
-        "item ready for sprint selection"
-      ],
-      "source": "github-issue",
-      "repo": "The-Next-Security/TNS_TRACK_DEMO",
-      "issueNumber": 46,
-      "issueUrl": "https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/46",
-      "labels": [
-        "bug",
-        "dependencies",
-        "front-end",
-        "technical-debt"
-      ],
-      "updatedAt": "2026-04-03T00:08:35Z"
-    },
-    {
-      "id": "GH-33",
-      "title": "fix: updateChannelThresholds fallará en runtime — threshold_min/max no existen en ubi_canal",
-      "type": "bug",
-      "priority": 17,
-      "status": "done",
-      "assignedRole": "product-owner",
-      "description": "Imported from GitHub issue #33 in The-Next-Security/TNS_TRACK_DEMO.\nURL: https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/33\nLabels: bug\n\n## Contexto\n\nDurante la migración del schema legacy al nuevo schema (Issue #9 FASE 0), se detectó que el método `updateChannelThresholds` en `servicios/src/controllers/ubibot_Controller.js` intenta actualizar columnas que **no existen** en la tabla `ubi_canal`.\n\n## Problema\n\n```js\n// ubibot_Controller.js — endpoint PUT /api/ubibot/channel/:channelId/thresholds\nUPDATE ubi_canal\nSET threshold_min = ?, threshold_max = ?\nWHERE canal_id = ?\n```\n\nLas columnas `threshold_min` y `threshold_max` **no exi...",
-      "definitionOfDone": [
-        "issue imported into local product backlog",
-        "work item reviewed by product-owner",
-        "implementation approach defined",
-        "item ready for sprint selection"
-      ],
-      "source": "github-issue",
-      "repo": "The-Next-Security/TNS_TRACK_DEMO",
-      "issueNumber": 33,
-      "issueUrl": "https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/33",
-      "labels": [
-        "bug"
-      ],
-      "updatedAt": "2026-04-03T00:08:37Z"
-    },
-    {
-      "id": "GH-32",
-      "title": "fix: migrar parametrizaciones → ubi_presets_temperatura en beacons y telConfig",
-      "type": "bug",
-      "priority": 18,
-      "status": "planned",
-      "assignedRole": "product-owner",
-      "description": "Imported from GitHub issue #32 in The-Next-Security/TNS_TRACK_DEMO.\nURL: https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/32\nLabels: bug, enhancement\n\n## Contexto\n\nDurante la migración de código legacy a el nuevo schema (Issue #9 / FASE 0), los archivos `beacons_Controller.js` y `telConfig_Controller.js` quedaron **bloqueados** porque usan `param_id` hardcodeados de la tabla `parametrizaciones` que necesitan mapearse a `ubi_presets_temperatura.id_preset`.\n\nLos demás 14 archivos del plan ya fueron migrados. Estos 2 son los únicos pendientes.\n\n---\n\n## Archivos afectados\n\n### `servicios/src/controllers/beacons_Controller.js` — líneas 439-440\n\n```...",
-      "definitionOfDone": [
-        "issue imported into local product backlog",
-        "work item reviewed by product-owner",
-        "implementation approach defined",
-        "item ready for sprint selection"
-      ],
-      "source": "github-issue",
-      "repo": "The-Next-Security/TNS_TRACK_DEMO",
-      "issueNumber": 32,
-      "issueUrl": "https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/32",
-      "labels": [
-        "bug",
-        "enhancement"
-      ],
-      "updatedAt": "2026-04-03T00:08:38Z"
-    },
-    {
-      "id": "GH-26",
-      "title": "Desarrollar endpoints necesarios para vistas de Sectores y Beacons",
+      "id": "GH-1",
+      "title": "Sprint 006 repo-alignment validation issue",
       "type": "story",
-      "priority": 19,
-      "status": "planned",
+      "priority": 22,
+      "status": "imported",
       "assignedRole": "product-owner",
-      "description": "Imported from GitHub issue #26 in The-Next-Security/TNS_TRACK_DEMO.\nURL: https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/26\nLabels: none\n\n## Contexto\n\nEn el refactor de rutas API (commit f726160 / Issue #11) se eliminó el montaje de:\n- `/api/sectores` (sectores_Routes)\n- `/api/beacons` (beacons_Routes)\n\nLos dominios quedaron **reservados para rediseño futuro** (ver Decisiones_Tecnicas.md §11). Las rutas ya no están montadas en `server.js`, pero el frontend sigue llamando a esos endpoints. Las vistas que dependen de ellos fallan.\n\n## Objetivo\n\nDesarrollar (o volver a exponer) los **endpoints necesarios** para que las siguientes vis...",
+      "description": "Imported from GitHub issue #1 in The-Next-Security/scrum-files.\nURL: https://github.com/The-Next-Security/scrum-files/issues/1\nLabels: none\n\nTesting dynamic repo resolution from origin",
       "definitionOfDone": [
         "issue imported into local product backlog",
         "work item reviewed by product-owner",
@@ -314,11 +216,11 @@
         "item ready for sprint selection"
       ],
       "source": "github-issue",
-      "repo": "The-Next-Security/TNS_TRACK_DEMO",
-      "issueNumber": 26,
-      "issueUrl": "https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/26",
+      "repo": "The-Next-Security/scrum-files",
+      "issueNumber": 1,
+      "issueUrl": "https://github.com/The-Next-Security/scrum-files/issues/1",
       "labels": [],
-      "updatedAt": "2026-04-03T00:08:39Z"
+      "updatedAt": "2026-04-20T20:29:51Z"
     }
   ]
 }

@@ -186,7 +186,6 @@ function selectPlannedItemsIntoActiveSprint(limit) {
     for (const backlogItem of backlogData.items) {
       if (selectedIds.has(backlogItem.id)) {
         backlogItem.status = "in-sprint";
-        backlogItem.sprintId = sprintState.sprintId;
       }
     }
     saveJson(PRODUCT_BACKLOG_FILE, backlogData);
@@ -212,7 +211,6 @@ function initializeSprint() {
     for (const backlogItem of backlogData.items) {
       if (selectedIds.has(backlogItem.id)) {
         backlogItem.status = "in-sprint";
-        backlogItem.sprintId = sprintState.sprintId;
       }
     }
     saveJson(PRODUCT_BACKLOG_FILE, backlogData);
@@ -544,26 +542,8 @@ function showSprint() {
 }
 
 
-function resolveGitHubRepoFromOrigin() {
-  const execSync = require("child_process").execSync;
-
-  let remoteUrl;
-  try {
-    remoteUrl = execSync("git remote get-url origin", { encoding: "utf-8" }).trim();
-  } catch (err) {
-    throw new Error("Failed to resolve git origin remote");
-  }
-
-  const match = remoteUrl.match(/github\.com[/:]([^/]+\/[^/.]+)(?:\.git)?$/);
-  if (!match) {
-    throw new Error(`Unsupported GitHub origin URL: ${remoteUrl}`);
-  }
-
-  return match[1];
-}
-
 function importGitHubIssues() {
-  const repo = resolveGitHubRepoFromOrigin();
+  const repo = "The-Next-Security/TNS_TRACK_DEMO";
 
   const execSync = require("child_process").execSync;
 
