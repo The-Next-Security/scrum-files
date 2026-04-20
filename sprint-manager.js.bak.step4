@@ -720,87 +720,6 @@ function writeBackGitHubIssueEvent(backlogItem, action, sprintId, metadata = {})
   }
 }
 
-function getExpectedScrumLabelForStatus(status) {
-  return SCRUM_LABELS[status] || null;
-}
-
-function reconcileGitHubScrumMirror() {
-  const backlog = readJson(PRODUCT_BACKLOG_FILE);
-  const items = Array.isArray(backlog.items) ? backlog.items : [];
-
-  const githubItems = items.filter(item => item && item.source === "github-issue");
-
-  if (githubItems.length === 0) {
-    console.log("[INFO] No GitHub-backed items found in product backlog");
-    return;
-  }
-
-  let ok = 0;
-  let missing = 0;
-  let multiple = 0;
-  let mismatch = 0;
-  let skipped = 0;
-
-  console.log("=== GITHUB SCRUM RECONCILE ===");
-
-  for (const item of githubItems) {
-    const expectedLabel = getExpectedScrumLabelForStatus(item.status);
-
-    if (!expectedLabel) {
-      console.log(`SKIP | ${item.id} | status=${item.status} | reason=no expected scrum label`);
-      skipped += 1;
-      continue;
-    }
-
-    let repo;
-    try {
-      repo = assertGitHubIssueRepoMatchesWorkspace(item);
-    } catch (error) {
-      console.log(`SKIP | ${item.id} | status=${item.status} | reason=${error.message}`);
-      skipped += 1;
-      continue;
-    }
-
-    try {
-      const scrumLabels = listScrumLabelsForIssue(repo, item.issueNumber);
-
-      if (scrumLabels.length === 0) {
-        console.log(`MISSING_LABEL | ${item.id} | status=${item.status} | expected=${expectedLabel} | actual=[]`);
-        missing += 1;
-        continue;
-      }
-
-      if (scrumLabels.length > 1) {
-        console.log(`MULTIPLE_SCRUM_LABELS | ${item.id} | status=${item.status} | expected=${expectedLabel} | actual=${scrumLabels.join(",")}`);
-        multiple += 1;
-        continue;
-      }
-
-      const actualLabel = scrumLabels[0];
-
-      if (actualLabel !== expectedLabel) {
-        console.log(`MISMATCH | ${item.id} | status=${item.status} | expected=${expectedLabel} | actual=${actualLabel}`);
-        mismatch += 1;
-        continue;
-      }
-
-      console.log(`OK | ${item.id} | status=${item.status} | label=${actualLabel}`);
-      ok += 1;
-    } catch (error) {
-      console.log(`SKIP | ${item.id} | status=${item.status} | reason=${error.message}`);
-      skipped += 1;
-    }
-  }
-
-  console.log("");
-  console.log("=== RECONCILE SUMMARY ===");
-  console.log(`ok=${ok}`);
-  console.log(`missing=${missing}`);
-  console.log(`multiple=${multiple}`);
-  console.log(`mismatch=${mismatch}`);
-  console.log(`skipped=${skipped}`);
-}
-    
 function importGitHubIssues() {
   const repo = resolveGitHubRepoFromOrigin();
 
@@ -1152,11 +1071,6 @@ function main() {
       throw new Error("Usage: node sprint-manager.js unblock <ITEM_ID>");
     }
     unblockItem(itemId);
-    return;
-  }
-
-  if (command === "reconcile") {
-    reconcileGitHubScrumMirror();
     return;
   }
 

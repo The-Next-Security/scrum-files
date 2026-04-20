@@ -346,18 +346,12 @@ function blockItem(itemId, reason) {
     throw new Error(`Item not found in backlog or inProgress: ${itemId}`);
   }
 
-  if (item.status === "blocked") {
-    throw new Error(`Item is already blocked: ${itemId}`);
-  }
-
-  item.previousStatus = item.status;
   item.status = "blocked";
   item.blockedAt = new Date().toISOString();
 
   const existing = sprintState.impediments.find(imp => imp.itemId === itemId);
   if (existing) {
     existing.reason = reason;
-    existing.location = location;
     existing.updatedAt = new Date().toISOString();
   } else {
     sprintState.impediments.push({
@@ -377,17 +371,8 @@ function blockItem(itemId, reason) {
     : null;
 
   if (backlogItem) {
-    backlogItem.previousStatus = backlogItem.status;
     backlogItem.status = "blocked";
-    backlogItem.blockedAt = item.blockedAt;
     saveJson(PRODUCT_BACKLOG_FILE, productBacklog);
-
-    try {
-      writeBackGitHubIssueEvent(backlogItem, "block", sprintState.sprintId, { reason });
-    } catch (error) {
-      console.log(`GitHub write-back failed for block ${itemId}: ${error.message}`);
-    }
-
     console.log(`Product backlog synced: ${itemId} -> blocked`);
   } else {
     console.log(`Product backlog item not found, sync skipped: ${itemId}`);
@@ -418,10 +403,15 @@ function unblockItem(itemId) {
 
   sprintState.impediments.splice(impedimentIndex, 1);
 
-  const restoredStatus = item.previousStatus || (backlogItem ? "in-sprint" : "in-progress");
-  item.status = restoredStatus;
+  if (backlogItem) {
+    backlogItem.status = "in-sprint";
+  } else if (progressItem) {
+    progressItem.status = "in-progress";
+  }
+
   item.unblockedAt = new Date().toISOString();
-  delete item.previousStatus;
+
+  const restoredStatus = backlogItem ? "in-sprint" : "in-progress";
 
   const productBacklog = readJson(PRODUCT_BACKLOG_FILE);
   const productItem = Array.isArray(productBacklog.items)
@@ -429,19 +419,9 @@ function unblockItem(itemId) {
     : null;
 
   if (productItem) {
-    const productRestoredStatus = productItem.previousStatus || restoredStatus;
-    productItem.status = productRestoredStatus;
-    productItem.unblockedAt = item.unblockedAt;
-    delete productItem.previousStatus;
+    productItem.status = restoredStatus;
     saveJson(PRODUCT_BACKLOG_FILE, productBacklog);
-
-    try {
-      writeBackGitHubIssueEvent(productItem, "unblock", sprintState.sprintId, { restoredStatus: productRestoredStatus });
-    } catch (error) {
-      console.log(`GitHub write-back failed for unblock ${itemId}: ${error.message}`);
-    }
-
-    console.log(`Product backlog synced: ${itemId} -> ${productRestoredStatus}`);
+    console.log(`Product backlog synced: ${itemId} -> ${restoredStatus}`);
   } else {
     console.log(`Product backlog item not found, sync skipped: ${itemId}`);
   }
@@ -449,7 +429,6 @@ function unblockItem(itemId) {
   saveJson(SPRINT_STATE_FILE, sprintState);
 
   console.log(`Item unblocked: ${itemId}`);
-  console.log(`Restored status: ${restoredStatus}`);
   console.log(`Sprint state updated: ${SPRINT_STATE_FILE}`);
 }
 
@@ -720,87 +699,6 @@ function writeBackGitHubIssueEvent(backlogItem, action, sprintId, metadata = {})
   }
 }
 
-function getExpectedScrumLabelForStatus(status) {
-  return SCRUM_LABELS[status] || null;
-}
-
-function reconcileGitHubScrumMirror() {
-  const backlog = readJson(PRODUCT_BACKLOG_FILE);
-  const items = Array.isArray(backlog.items) ? backlog.items : [];
-
-  const githubItems = items.filter(item => item && item.source === "github-issue");
-
-  if (githubItems.length === 0) {
-    console.log("[INFO] No GitHub-backed items found in product backlog");
-    return;
-  }
-
-  let ok = 0;
-  let missing = 0;
-  let multiple = 0;
-  let mismatch = 0;
-  let skipped = 0;
-
-  console.log("=== GITHUB SCRUM RECONCILE ===");
-
-  for (const item of githubItems) {
-    const expectedLabel = getExpectedScrumLabelForStatus(item.status);
-
-    if (!expectedLabel) {
-      console.log(`SKIP | ${item.id} | status=${item.status} | reason=no expected scrum label`);
-      skipped += 1;
-      continue;
-    }
-
-    let repo;
-    try {
-      repo = assertGitHubIssueRepoMatchesWorkspace(item);
-    } catch (error) {
-      console.log(`SKIP | ${item.id} | status=${item.status} | reason=${error.message}`);
-      skipped += 1;
-      continue;
-    }
-
-    try {
-      const scrumLabels = listScrumLabelsForIssue(repo, item.issueNumber);
-
-      if (scrumLabels.length === 0) {
-        console.log(`MISSING_LABEL | ${item.id} | status=${item.status} | expected=${expectedLabel} | actual=[]`);
-        missing += 1;
-        continue;
-      }
-
-      if (scrumLabels.length > 1) {
-        console.log(`MULTIPLE_SCRUM_LABELS | ${item.id} | status=${item.status} | expected=${expectedLabel} | actual=${scrumLabels.join(",")}`);
-        multiple += 1;
-        continue;
-      }
-
-      const actualLabel = scrumLabels[0];
-
-      if (actualLabel !== expectedLabel) {
-        console.log(`MISMATCH | ${item.id} | status=${item.status} | expected=${expectedLabel} | actual=${actualLabel}`);
-        mismatch += 1;
-        continue;
-      }
-
-      console.log(`OK | ${item.id} | status=${item.status} | label=${actualLabel}`);
-      ok += 1;
-    } catch (error) {
-      console.log(`SKIP | ${item.id} | status=${item.status} | reason=${error.message}`);
-      skipped += 1;
-    }
-  }
-
-  console.log("");
-  console.log("=== RECONCILE SUMMARY ===");
-  console.log(`ok=${ok}`);
-  console.log(`missing=${missing}`);
-  console.log(`multiple=${multiple}`);
-  console.log(`mismatch=${mismatch}`);
-  console.log(`skipped=${skipped}`);
-}
-    
 function importGitHubIssues() {
   const repo = resolveGitHubRepoFromOrigin();
 
@@ -1152,11 +1050,6 @@ function main() {
       throw new Error("Usage: node sprint-manager.js unblock <ITEM_ID>");
     }
     unblockItem(itemId);
-    return;
-  }
-
-  if (command === "reconcile") {
-    reconcileGitHubScrumMirror();
     return;
   }
 

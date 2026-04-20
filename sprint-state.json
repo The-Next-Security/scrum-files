@@ -17,6 +17,19 @@
       "sourceStatus": "planned",
       "startedAt": "2026-04-20T20:51:10.306Z",
       "completedAt": "2026-04-20T20:53:02.634Z"
+    },
+    {
+      "id": "GH-2",
+      "title": "OpenClaw audit test - refine/select labels",
+      "type": "story",
+      "priority": 23,
+      "status": "done",
+      "assignedRole": "product-owner",
+      "sourceStatus": "planned",
+      "startedAt": "2026-04-20T21:24:29.532Z",
+      "blockedAt": "2026-04-20T21:25:52.144Z",
+      "unblockedAt": "2026-04-20T21:26:26.647Z",
+      "completedAt": "2026-04-20T21:27:11.827Z"
     }
   ],
   "impediments": [],

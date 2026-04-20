@@ -223,6 +223,31 @@
       "updatedAt": "2026-04-20T20:29:51Z",
       "refinedAt": "2026-04-20T20:49:56.952Z",
       "sprintId": "sprint-006"
+    },
+    {
+      "id": "GH-2",
+      "title": "OpenClaw audit test - refine/select labels",
+      "type": "story",
+      "priority": 23,
+      "status": "done",
+      "assignedRole": "product-owner",
+      "description": "Imported from GitHub issue #2 in The-Next-Security/scrum-files.\nURL: https://github.com/The-Next-Security/scrum-files/issues/2\nLabels: none\n\nIssue temporal para validar import-github, refine, select y labels Scrum en Sprint Manager.",
+      "definitionOfDone": [
+        "issue imported into local product backlog",
+        "work item reviewed by product-owner",
+        "implementation approach defined",
+        "item ready for sprint selection"
+      ],
+      "source": "github-issue",
+      "repo": "The-Next-Security/scrum-files",
+      "issueNumber": 2,
+      "issueUrl": "https://github.com/The-Next-Security/scrum-files/issues/2",
+      "labels": [],
+      "updatedAt": "2026-04-20T21:22:21Z",
+      "refinedAt": "2026-04-20T21:23:18.431Z",
+      "sprintId": "sprint-006",
+      "blockedAt": "2026-04-20T21:25:52.144Z",
+      "unblockedAt": "2026-04-20T21:26:26.647Z"
     }
   ]
 }
