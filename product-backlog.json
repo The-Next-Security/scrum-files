@@ -206,7 +206,7 @@
       "title": "Sprint 006 repo-alignment validation issue",
       "type": "story",
       "priority": 22,
-      "status": "imported",
+      "status": "done",
       "assignedRole": "product-owner",
       "description": "Imported from GitHub issue #1 in The-Next-Security/scrum-files.\nURL: https://github.com/The-Next-Security/scrum-files/issues/1\nLabels: none\n\nTesting dynamic repo resolution from origin",
       "definitionOfDone": [
@@ -220,7 +220,9 @@
       "issueNumber": 1,
       "issueUrl": "https://github.com/The-Next-Security/scrum-files/issues/1",
       "labels": [],
-      "updatedAt": "2026-04-20T20:29:51Z"
+      "updatedAt": "2026-04-20T20:29:51Z",
+      "refinedAt": "2026-04-20T20:49:56.952Z",
+      "sprintId": "sprint-006"
     }
   ]
 }

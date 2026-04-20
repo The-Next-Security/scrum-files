@@ -259,7 +259,6 @@ function startItem(itemId) {
   if (backlogItem) {
     backlogItem.status = "in-progress";
     saveJson(PRODUCT_BACKLOG_FILE, productBacklog);
-    writeBackGitHubIssueEvent(backlogItem, "start", sprintState.sprintId);
     console.log(`Product backlog synced: ${itemId} -> in-progress`);
   } else {
     console.log(`Product backlog item not found, sync skipped: ${itemId}`);
@@ -299,7 +298,6 @@ function completeItem(itemId) {
   if (backlogItem) {
     backlogItem.status = "done";
     saveJson(PRODUCT_BACKLOG_FILE, productBacklog);
-    writeBackGitHubIssueEvent(backlogItem, "complete", sprintState.sprintId);
     console.log(`Product backlog synced: ${itemId} -> done`);
   } else {
     console.log(`Product backlog item not found, sync skipped: ${itemId}`);
@@ -562,60 +560,6 @@ function resolveGitHubRepoFromOrigin() {
   }
 
   return match[1];
-}
-
-function escapeShellArg(value) {
-  return `'${String(value).replace(/'/g, `'"'"'`)}'`;
-}
-
-function assertGitHubIssueRepoMatchesWorkspace(backlogItem) {
-  if (!backlogItem || backlogItem.source !== "github-issue") {
-    return null;
-  }
-
-  const workspaceRepo = resolveGitHubRepoFromOrigin();
-  if (backlogItem.repo !== workspaceRepo) {
-    throw new Error(
-      `GitHub repo mismatch for ${backlogItem.id}: item repo=${backlogItem.repo}, workspace repo=${workspaceRepo}`
-    );
-  }
-
-  return workspaceRepo;
-}
-
-function writeBackGitHubIssueEvent(backlogItem, action, sprintId) {
-  const repo = assertGitHubIssueRepoMatchesWorkspace(backlogItem);
-  if (!repo) {
-    return;
-  }
-
-  const execSync = require("child_process").execSync;
-  const issueNumber = backlogItem.issueNumber;
-
-  let body;
-  if (action === "start") {
-    body = `OpenClaw update: item ${backlogItem.id} moved to in-progress in ${sprintId}.`;
-    execSync(
-      `gh issue comment ${issueNumber} --repo ${repo} --body ${escapeShellArg(body)}`,
-      { stdio: "ignore" }
-    );
-    return;
-  }
-
-  if (action === "complete") {
-    body = `OpenClaw update: item ${backlogItem.id} completed in ${sprintId}.`;
-    execSync(
-      `gh issue comment ${issueNumber} --repo ${repo} --body ${escapeShellArg(body)}`,
-      { stdio: "ignore" }
-    );
-    execSync(
-      `gh issue close ${issueNumber} --repo ${repo} --comment ${escapeShellArg("Closed automatically by OpenClaw after completion.")}`,
-      { stdio: "ignore" }
-    );
-    return;
-  }
-
-  throw new Error(`Unsupported GitHub write-back action: ${action}`);
 }
 
 function importGitHubIssues() {
