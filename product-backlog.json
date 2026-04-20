@@ -1,0 +1,324 @@
+{
+  "generatedAt": "2026-04-19T00:00:00.000Z",
+  "owner": "product-owner",
+  "items": [
+    {
+      "id": "PB-001",
+      "title": "Create persistent Scrum team state",
+      "type": "story",
+      "priority": 1,
+      "status": "done",
+      "assignedRole": "scrum-master",
+      "description": "As the OpenClaw Scrum system, I want a persistent team-state artifact so that the autonomous team structure is always visible.",
+      "definitionOfDone": [
+        "team-state.json exists",
+        "scrum-master is identified",
+        "product-owner is identified",
+        "development team list is persisted"
+      ]
+    },
+    {
+      "id": "PB-002",
+      "title": "Create persistent sprint state",
+      "type": "story",
+      "priority": 2,
+      "status": "done",
+      "assignedRole": "scrum-master",
+      "description": "As the OpenClaw Scrum system, I want a persistent sprint-state artifact so that the sprint lifecycle can be tracked.",
+      "definitionOfDone": [
+        "sprint-state.json exists",
+        "sprintId is defined",
+        "currentPhase is defined",
+        "core sprint collections exist"
+      ]
+    },
+    {
+      "id": "PB-003",
+      "title": "Create initial product backlog artifact",
+      "type": "story",
+      "priority": 3,
+      "status": "done",
+      "assignedRole": "product-owner",
+      "description": "As the Product Owner, I want an initial product backlog file so that the first sprint can be planned from explicit work items.",
+      "definitionOfDone": [
+        "product-backlog.json exists",
+        "backlog has prioritized items",
+        "each item has id, title, priority, status and DoD"
+      ]
+    },
+    {
+      "id": "PB-004",
+      "title": "Load backlog into sprint manager",
+      "type": "story",
+      "priority": 4,
+      "status": "done",
+      "assignedRole": "coding-agent",
+      "description": "As the Scrum system, I want the sprint manager to read the backlog so that the sprint can operate from real work items.",
+      "definitionOfDone": [
+        "sprint-manager reads product-backlog.json",
+        "backlog item count is displayed",
+        "invalid backlog file raises clear error"
+      ]
+    },
+    {
+      "id": "PB-005",
+      "title": "Select sprint backlog from planned items",
+      "type": "story",
+      "priority": 5,
+      "status": "done",
+      "assignedRole": "scrum-master",
+      "description": "As the Scrum system, I want planned items to be selected into the sprint backlog so that sprint execution starts from committed work.",
+      "definitionOfDone": [
+        "planned items can be filtered",
+        "selected sprint backlog is persisted",
+        "selection result is visible in sprint-state.json"
+      ]
+    },
+    {
+      "id": "PB-006",
+      "title": "Formalize sprint planning command",
+      "type": "story",
+      "priority": 6,
+      "status": "done",
+      "assignedRole": "scrum-master",
+      "description": "As the Scrum system, I want a planning command so that the active sprint can be initialized with a formal sprint goal.",
+      "definitionOfDone": [
+        "planning command exists",
+        "sprintGoal is persisted",
+        "status is set to planned",
+        "currentPhase is set to planning"
+      ]
+    },
+    {
+      "id": "PB-007",
+      "title": "List archived sprint history",
+      "type": "story",
+      "priority": 7,
+      "status": "done",
+      "assignedRole": "coding-agent",
+      "description": "As the Scrum system, I want a history command so that archived sprints can be listed from terminal.",
+      "definitionOfDone": [
+        "history command exists",
+        "archived sprint files are listed",
+        "summary includes status and counts"
+      ]
+    },
+    {
+      "id": "PB-008",
+      "title": "Inspect archived sprint detail",
+      "type": "story",
+      "priority": 8,
+      "status": "done",
+      "assignedRole": "coding-agent",
+      "description": "As the Scrum system, I want a history-detail command so that a specific archived sprint can be inspected from terminal.",
+      "definitionOfDone": [
+        "history-detail command exists",
+        "specific sprint can be loaded by sprintId",
+        "full archived JSON is displayed"
+      ]
+    },
+    {
+      "id": "PB-009",
+      "title": "Improve show output with sprint goal",
+      "type": "story",
+      "priority": 9,
+      "status": "done",
+      "assignedRole": "coding-agent",
+      "description": "As the Scrum system, I want the show command to include sprintGoal so that the active sprint summary is complete.",
+      "definitionOfDone": [
+        "show output includes sprintGoal",
+        "active sprint summary is easier to read"
+      ]
+    },
+    {
+      "id": "PB-010",
+      "title": "Prepare real sprint backlog selection for Sprint 003",
+      "type": "story",
+      "priority": 10,
+      "status": "done",
+      "assignedRole": "scrum-master",
+      "description": "As the Scrum system, I want the next real sprint items selected from product backlog so that Sprint 003 can execute committed work.",
+      "definitionOfDone": [
+        "planned product backlog items are identified",
+        "selected items can be moved into sprint backlog",
+        "Sprint 003 has real committed work"
+      ]
+    },
+    {
+      "id": "PB-011",
+      "title": "Add native sprint backlog selection command",
+      "type": "story",
+      "priority": 11,
+      "status": "done",
+      "assignedRole": "coding-agent",
+      "description": "As the Scrum system, I want a native select command so that planned product backlog items can be loaded into the active sprint without manual Python editing.",
+      "definitionOfDone": [
+        "select command exists",
+        "reads planned items from product-backlog.json",
+        "loads selected items into sprint-state backlog",
+        "avoids duplicate sprint backlog entries"
+      ]
+    },
+    {
+      "id": "PB-012",
+      "title": "Add automatic product backlog sync on complete",
+      "type": "story",
+      "priority": 12,
+      "status": "done",
+      "assignedRole": "coding-agent",
+      "description": "As the Scrum system, I want completed sprint items to update product-backlog.json automatically so that backlog state stays consistent.",
+      "definitionOfDone": [
+        "complete command updates sprint-state.json",
+        "matching product backlog item is marked done automatically",
+        "missing product backlog item does not break the command"
+      ]
+    },
+    {
+      "id": "PB-013",
+      "title": "Add review close command",
+      "type": "story",
+      "priority": 13,
+      "status": "done",
+      "assignedRole": "scrum-master",
+      "description": "As the Scrum system, I want an explicit review-close command so that review state transitions are formalized before retrospective.",
+      "definitionOfDone": [
+        "review-close command exists",
+        "status and phase move consistently after review",
+        "command is visible in sprint flow"
+      ]
+    },
+    {
+      "id": "PB-014",
+      "title": "Add retrospective close command",
+      "type": "story",
+      "priority": 14,
+      "status": "done",
+      "assignedRole": "scrum-master",
+      "description": "As the Scrum system, I want an explicit retro-close command so that sprint closure is formalized before next-sprint.",
+      "definitionOfDone": [
+        "retro-close command exists",
+        "completed sprint can be formally closed",
+        "transition before next-sprint is explicit"
+      ]
+    },
+    {
+      "id": "GH-83",
+      "title": "[BUG] Vista de horarios base muestra 32 entradas planas sin agrupar",
+      "type": "bug",
+      "priority": 15,
+      "status": "done",
+      "assignedRole": "product-owner",
+      "description": "Imported from GitHub issue #83 in The-Next-Security/TNS_TRACK_DEMO.\nURL: https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/83\nLabels: bug, enhancement, front-end\n\n## Descripción\n\nLa página `/configuracion-horarios-envio` (sección admin de horarios base) muestra **32 ítems individuales** en una lista plana, lo que hace la vista difícil de gestionar.\n\n## Causa raíz\n\nLa tabla `ale_horarios_alerta_canal` tiene **1 fila por combinación** `tipo_alerta × canal × día_semana`. Con los datos actuales:\n- 2 tipos de alerta (Temperatura, Desconexión)\n- × 2 canales (email, push)\n- × 8 días (Lun–Dom + Feriado)\n- = **32 filas**\n\nEl componente `NotificationHorariosEnvio_V...",
+      "definitionOfDone": [
+        "issue imported into local product backlog",
+        "work item reviewed by product-owner",
+        "implementation approach defined",
+        "item ready for sprint selection"
+      ],
+      "source": "github-issue",
+      "repo": "The-Next-Security/TNS_TRACK_DEMO",
+      "issueNumber": 83,
+      "issueUrl": "https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/83",
+      "labels": [
+        "bug",
+        "enhancement",
+        "front-end"
+      ],
+      "updatedAt": "2026-04-03T00:08:34Z"
+    },
+    {
+      "id": "GH-46",
+      "title": "[BUG] Warning Critical dependency en react-datepicker por require() dinámico",
+      "type": "bug",
+      "priority": 16,
+      "status": "done",
+      "assignedRole": "product-owner",
+      "description": "Imported from GitHub issue #46 in The-Next-Security/TNS_TRACK_DEMO.\nURL: https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/46\nLabels: bug, dependencies, front-end, technical-debt\n\n## Idea general\n\n`react-datepicker` usa `require()` dinámico internamente para cargar locales de `date-fns`, lo que webpack 5 reporta como warning \\\"Critical dependency: the request of a dependency is an expression\\\". El `ContextReplacementPlugin` existente para `date-fns/locale` no cubre este caso porque el warning proviene del código interno del paquete.\n\n## Solución temporal aplicada\n\nSe agregó `ignoreWarnings` en `webpack.config.js` para suprimir el warning mientras no se corrija en el paque...",
+      "definitionOfDone": [
+        "issue imported into local product backlog",
+        "work item reviewed by product-owner",
+        "implementation approach defined",
+        "item ready for sprint selection"
+      ],
+      "source": "github-issue",
+      "repo": "The-Next-Security/TNS_TRACK_DEMO",
+      "issueNumber": 46,
+      "issueUrl": "https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/46",
+      "labels": [
+        "bug",
+        "dependencies",
+        "front-end",
+        "technical-debt"
+      ],
+      "updatedAt": "2026-04-03T00:08:35Z"
+    },
+    {
+      "id": "GH-33",
+      "title": "fix: updateChannelThresholds fallará en runtime — threshold_min/max no existen en ubi_canal",
+      "type": "bug",
+      "priority": 17,
+      "status": "done",
+      "assignedRole": "product-owner",
+      "description": "Imported from GitHub issue #33 in The-Next-Security/TNS_TRACK_DEMO.\nURL: https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/33\nLabels: bug\n\n## Contexto\n\nDurante la migración del schema legacy al nuevo schema (Issue #9 FASE 0), se detectó que el método `updateChannelThresholds` en `servicios/src/controllers/ubibot_Controller.js` intenta actualizar columnas que **no existen** en la tabla `ubi_canal`.\n\n## Problema\n\n```js\n// ubibot_Controller.js — endpoint PUT /api/ubibot/channel/:channelId/thresholds\nUPDATE ubi_canal\nSET threshold_min = ?, threshold_max = ?\nWHERE canal_id = ?\n```\n\nLas columnas `threshold_min` y `threshold_max` **no exi...",
+      "definitionOfDone": [
+        "issue imported into local product backlog",
+        "work item reviewed by product-owner",
+        "implementation approach defined",
+        "item ready for sprint selection"
+      ],
+      "source": "github-issue",
+      "repo": "The-Next-Security/TNS_TRACK_DEMO",
+      "issueNumber": 33,
+      "issueUrl": "https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/33",
+      "labels": [
+        "bug"
+      ],
+      "updatedAt": "2026-04-03T00:08:37Z"
+    },
+    {
+      "id": "GH-32",
+      "title": "fix: migrar parametrizaciones → ubi_presets_temperatura en beacons y telConfig",
+      "type": "bug",
+      "priority": 18,
+      "status": "planned",
+      "assignedRole": "product-owner",
+      "description": "Imported from GitHub issue #32 in The-Next-Security/TNS_TRACK_DEMO.\nURL: https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/32\nLabels: bug, enhancement\n\n## Contexto\n\nDurante la migración de código legacy a el nuevo schema (Issue #9 / FASE 0), los archivos `beacons_Controller.js` y `telConfig_Controller.js` quedaron **bloqueados** porque usan `param_id` hardcodeados de la tabla `parametrizaciones` que necesitan mapearse a `ubi_presets_temperatura.id_preset`.\n\nLos demás 14 archivos del plan ya fueron migrados. Estos 2 son los únicos pendientes.\n\n---\n\n## Archivos afectados\n\n### `servicios/src/controllers/beacons_Controller.js` — líneas 439-440\n\n```...",
+      "definitionOfDone": [
+        "issue imported into local product backlog",
+        "work item reviewed by product-owner",
+        "implementation approach defined",
+        "item ready for sprint selection"
+      ],
+      "source": "github-issue",
+      "repo": "The-Next-Security/TNS_TRACK_DEMO",
+      "issueNumber": 32,
+      "issueUrl": "https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/32",
+      "labels": [
+        "bug",
+        "enhancement"
+      ],
+      "updatedAt": "2026-04-03T00:08:38Z"
+    },
+    {
+      "id": "GH-26",
+      "title": "Desarrollar endpoints necesarios para vistas de Sectores y Beacons",
+      "type": "story",
+      "priority": 19,
+      "status": "planned",
+      "assignedRole": "product-owner",
+      "description": "Imported from GitHub issue #26 in The-Next-Security/TNS_TRACK_DEMO.\nURL: https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/26\nLabels: none\n\n## Contexto\n\nEn el refactor de rutas API (commit f726160 / Issue #11) se eliminó el montaje de:\n- `/api/sectores` (sectores_Routes)\n- `/api/beacons` (beacons_Routes)\n\nLos dominios quedaron **reservados para rediseño futuro** (ver Decisiones_Tecnicas.md §11). Las rutas ya no están montadas en `server.js`, pero el frontend sigue llamando a esos endpoints. Las vistas que dependen de ellos fallan.\n\n## Objetivo\n\nDesarrollar (o volver a exponer) los **endpoints necesarios** para que las siguientes vis...",
+      "definitionOfDone": [
+        "issue imported into local product backlog",
+        "work item reviewed by product-owner",
+        "implementation approach defined",
+        "item ready for sprint selection"
+      ],
+      "source": "github-issue",
+      "repo": "The-Next-Security/TNS_TRACK_DEMO",
+      "issueNumber": 26,
+      "issueUrl": "https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/26",
+      "labels": [],
+      "updatedAt": "2026-04-03T00:08:39Z"
+    }
+  ]
+}

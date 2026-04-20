@@ -1,0 +1,44 @@
+{
+  "generatedAt": "2026-04-19T16:26:42.901Z",
+  "sprintId": "sprint-003",
+  "sprintGoal": "Definir Sprint 003 y preparar planificación operativa real",
+  "status": "completed",
+  "currentPhase": "retrospective-complete",
+  "backlog": [],
+  "inProgress": [],
+  "done": [
+    {
+      "id": "PB-009",
+      "title": "Improve show output with sprint goal",
+      "priority": 9,
+      "status": "done",
+      "assignedRole": "coding-agent",
+      "sourceStatus": "planned",
+      "startedAt": "2026-04-19T21:41:15.370Z",
+      "completedAt": "2026-04-19T21:42:48.356Z"
+    },
+    {
+      "id": "PB-010",
+      "title": "Prepare real sprint backlog selection for Sprint 003",
+      "priority": 10,
+      "status": "done",
+      "assignedRole": "scrum-master",
+      "sourceStatus": "planned",
+      "startedAt": "2026-04-19T21:43:22.110Z",
+      "completedAt": "2026-04-19T21:45:38.353Z"
+    }
+  ],
+  "impediments": [],
+  "reviewNotes": [
+    {
+      "note": "Sprint 003 completado: mejoras en visibilidad (show), selección de backlog y gestión de historial operativo",
+      "createdAt": "2026-04-19T21:46:41.598Z"
+    }
+  ],
+  "retrospectiveNotes": [
+    {
+      "note": "El modelo de estado evolucionó (todo → planned); validar consistencia temprana evita refactors posteriores",
+      "createdAt": "2026-04-19T21:46:47.682Z"
+    }
+  ]
+}

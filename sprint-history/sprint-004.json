@@ -1,0 +1,59 @@
+{
+  "generatedAt": "2026-04-19T21:54:55.648Z",
+  "sprintId": "sprint-004",
+  "sprintGoal": "Reducir intervención manual en Scrum con selección nativa de backlog y sincronización automática del product backlog",
+  "status": "completed",
+  "currentPhase": "retrospective-complete",
+  "backlog": [],
+  "inProgress": [],
+  "done": [
+    {
+      "id": "PB-011",
+      "title": "Add native sprint backlog selection command",
+      "priority": 11,
+      "status": "done",
+      "assignedRole": "coding-agent",
+      "sourceStatus": "planned",
+      "startedAt": "2026-04-19T21:55:08.527Z",
+      "completedAt": "2026-04-19T21:58:04.748Z"
+    },
+    {
+      "id": "PB-012",
+      "title": "Add automatic product backlog sync on complete",
+      "priority": 12,
+      "status": "done",
+      "assignedRole": "coding-agent",
+      "sourceStatus": "planned",
+      "startedAt": "2026-04-19T21:59:48.723Z",
+      "completedAt": "2026-04-19T21:59:52.908Z"
+    },
+    {
+      "id": "PB-014",
+      "title": "Add retrospective close command",
+      "priority": 14,
+      "status": "done",
+      "assignedRole": "scrum-master",
+      "sourceStatus": "planned",
+      "startedAt": "2026-04-19T22:03:00.381Z",
+      "completedAt": "2026-04-19T22:03:04.412Z"
+    },
+    {
+      "id": "PB-013",
+      "title": "Add review close command",
+      "priority": 13,
+      "status": "done",
+      "assignedRole": "scrum-master",
+      "sourceStatus": "planned",
+      "startedAt": "2026-04-19T22:00:52.240Z",
+      "completedAt": "2026-04-19T22:03:52.439Z"
+    }
+  ],
+  "impediments": [],
+  "reviewNotes": [],
+  "retrospectiveNotes": [
+    {
+      "note": "Sprint 004 redujo intervención manual: selección nativa de backlog, sync automático al completar y cierres explícitos de review/retrospective",
+      "createdAt": "2026-04-19T22:08:30.371Z"
+    }
+  ]
+}

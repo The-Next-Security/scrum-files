@@ -1,0 +1,861 @@
+const fs = require("fs");
+
+const SKILLS_DIR = "/root/.openclaw/skills";
+const SCRUM_DIR = "/root/.openclaw/scrum";
+const TEAM_STATE_FILE = `${SCRUM_DIR}/team-state.json`;
+const SPRINT_STATE_FILE = `${SCRUM_DIR}/sprint-state.json`;
+const PRODUCT_BACKLOG_FILE = `${SCRUM_DIR}/product-backlog.json`;
+
+function listAgents(skillsDir) {
+  if (!fs.existsSync(skillsDir)) {
+    throw new Error(`Skills directory not found: ${skillsDir}`);
+  }
+
+  return fs
+    .readdirSync(skillsDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+}
+
+function classifyAgents(agents) {
+  const scrumMaster = agents.includes("scrum-master") ? "scrum-master" : null;
+  const productOwner = agents.includes("product-owner") ? "product-owner" : null;
+
+  const developmentTeam = agents.filter(
+    (agent) => agent !== "scrum-master" && agent !== "product-owner"
+  );
+
+  return {
+    scrumMaster,
+    productOwner,
+    developmentTeam,
+  };
+}
+
+function buildTeamState(classification) {
+  return {
+    generatedAt: new Date().toISOString(),
+    scrumMaster: classification.scrumMaster,
+    productOwner: classification.productOwner,
+    developmentTeam: classification.developmentTeam,
+    teamSize: classification.developmentTeam.length,
+    readiness: {
+      scrumMasterReady: Boolean(classification.scrumMaster),
+      productOwnerReady: Boolean(classification.productOwner),
+      developmentTeamReady: classification.developmentTeam.length > 0,
+    },
+  };
+}
+
+function buildInitialSprintState(selectedBacklog) {
+  return {
+    generatedAt: new Date().toISOString(),
+    sprintId: "sprint-001",
+    sprintGoal: "Initialize autonomous Scrum orchestration in OpenClaw",
+    status: "planning-complete",
+    currentPhase: "ready-for-execution",
+    backlog: selectedBacklog,
+    inProgress: [],
+    done: [],
+    impediments: [],
+    reviewNotes: [],
+    retrospectiveNotes: []
+  };
+}
+
+function saveJson(filePath, data) {
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf8");
+}
+
+function readJson(filePath) {
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`JSON file not found: ${filePath}`);
+  }
+
+  const raw = fs.readFileSync(filePath, "utf8");
+  return JSON.parse(raw);
+}
+
+function summarizeBacklog(backlogData) {
+  if (!backlogData.items || !Array.isArray(backlogData.items)) {
+    throw new Error("Invalid backlog format: 'items' array is missing");
+  }
+
+  const total = backlogData.items.length;
+  const done = backlogData.items.filter(item => item.status === "done");
+  const planned = backlogData.items.filter(item => item.status === "planned");
+  const other = backlogData.items.filter(
+    item => item.status !== "done" && item.status !== "planned"
+  );
+
+  return {
+    total,
+    done,
+    planned,
+    other
+  };
+}
+
+function selectSprintBacklog(plannedItems, limit) {
+  const normalizedLimit = Number.isInteger(limit) && limit > 0 ? limit : plannedItems.length;
+
+  return plannedItems
+    .slice()
+    .map((item, index) => ({
+      originalIndex: index,
+      item
+    }))
+    .sort((a, b) => {
+      const aType = typeof a.item.type === "string" ? a.item.type.toLowerCase() : "story";
+      const bType = typeof b.item.type === "string" ? b.item.type.toLowerCase() : "story";
+
+      const aBugRank = aType === "bug" ? 0 : 1;
+      const bBugRank = bType === "bug" ? 0 : 1;
+
+      if (aBugRank !== bBugRank) {
+        return aBugRank - bBugRank;
+      }
+
+      const aPriority = Number.isFinite(a.item.priority) ? a.item.priority : Number.MAX_SAFE_INTEGER;
+      const bPriority = Number.isFinite(b.item.priority) ? b.item.priority : Number.MAX_SAFE_INTEGER;
+
+      if (aPriority !== bPriority) {
+        return aPriority - bPriority;
+      }
+
+      return a.originalIndex - b.originalIndex;
+    })
+    .slice(0, normalizedLimit)
+    .map(({ item }) => ({
+      id: item.id,
+      title: item.title,
+      type: item.type,
+      priority: item.priority,
+      status: "planned",
+      assignedRole: item.assignedRole,
+      sourceStatus: item.status
+    }));
+}
+
+function selectPlannedItemsIntoActiveSprint(limit) {
+  const backlogData = readJson(PRODUCT_BACKLOG_FILE);
+  const backlogSummary = summarizeBacklog(backlogData);
+  const sprintState = readJson(SPRINT_STATE_FILE);
+
+  const backlogItems = Array.isArray(sprintState.backlog) ? sprintState.backlog : [];
+  const inProgressItems = Array.isArray(sprintState.inProgress) ? sprintState.inProgress : [];
+  const doneItems = Array.isArray(sprintState.done) ? sprintState.done : [];
+
+  const existingIds = new Set(
+    []
+      .concat(backlogItems)
+      .concat(inProgressItems)
+      .concat(doneItems)
+      .map(item => item.id)
+  );
+
+  const usedCapacity = backlogItems.length + inProgressItems.length;
+  const availableCapacity = Math.max(0, limit - usedCapacity);
+
+  if (availableCapacity === 0) {
+    console.log(`No items selected: sprint is already at full capacity (${usedCapacity}/${limit})`);
+    return;
+  }
+
+  const eligibleItems = backlogSummary.planned.filter(item => !existingIds.has(item.id));
+  const selectedItems = selectSprintBacklog(eligibleItems, availableCapacity);
+
+  console.log(`Eligible planned items: ${eligibleItems.length}`);
+  console.log(`Capacity used: ${usedCapacity}/${limit}`);
+
+  if (selectedItems.length === 0) {
+    console.log("No eligible planned items found to load into sprint backlog");
+    return;
+  }
+
+  if (!Array.isArray(sprintState.backlog)) {
+    sprintState.backlog = [];
+  }
+
+  sprintState.backlog.push(...selectedItems);
+  saveJson(SPRINT_STATE_FILE, sprintState);
+
+  console.log(`Planned items loaded into sprint backlog: ${selectedItems.length}`);
+  console.log(`Sprint state updated: ${SPRINT_STATE_FILE}`);
+}
+
+function initializeSprint() {
+  const agents = listAgents(SKILLS_DIR);  const classification = classifyAgents(agents);
+  const teamState = buildTeamState(classification);
+  const backlogData = readJson(PRODUCT_BACKLOG_FILE);
+  const backlogSummary = summarizeBacklog(backlogData);
+  const selectedSprintBacklog = selectSprintBacklog(backlogSummary.planned);
+  const sprintState = buildInitialSprintState(selectedSprintBacklog);
+
+  saveJson(TEAM_STATE_FILE, teamState);
+  saveJson(SPRINT_STATE_FILE, sprintState);
+
+  console.log("=== OpenClaw Sprint Manager v9 ===");
+  console.log(`Agents found: ${agents.length}`);
+  console.log(`Sprint backlog items: ${selectedSprintBacklog.length}`);
+  console.log(`Sprint state saved to: ${SPRINT_STATE_FILE}`);
+}
+
+function startItem(itemId) {
+  const sprintState = readJson(SPRINT_STATE_FILE);
+
+  const index = sprintState.backlog.findIndex(item => item.id === itemId);
+  if (index === -1) {
+    throw new Error(`Item not found in sprint backlog: ${itemId}`);
+  }
+
+  const item = sprintState.backlog[index];
+  if (item.status === "blocked") {
+    throw new Error(`Item is blocked and cannot be started: ${itemId}`);
+  }
+
+  const [moved] = sprintState.backlog.splice(index, 1);
+  moved.status = "in-progress";
+  moved.startedAt = new Date().toISOString();
+
+  sprintState.inProgress.push(moved);
+  sprintState.currentPhase = "execution";
+  sprintState.status = "active";
+
+  saveJson(SPRINT_STATE_FILE, sprintState);
+
+  console.log(`Item moved to inProgress: ${moved.id}`);
+  console.log(`Assigned role: ${moved.assignedRole}`);
+  console.log(`Sprint state updated: ${SPRINT_STATE_FILE}`);
+}
+
+function completeItem(itemId) {
+  const sprintState = readJson(SPRINT_STATE_FILE);
+
+  const index = sprintState.inProgress.findIndex(item => item.id === itemId);
+  if (index === -1) {
+    throw new Error(`Item not found in inProgress: ${itemId}`);
+  }
+
+  const item = sprintState.inProgress[index];
+  if (item.status === "blocked") {
+    throw new Error(`Blocked item cannot be completed until unblocked: ${itemId}`);
+  }
+
+  const [moved] = sprintState.inProgress.splice(index, 1);
+  moved.status = "done";
+  moved.completedAt = new Date().toISOString();
+
+  sprintState.done.push(moved);
+
+  const productBacklog = readJson(PRODUCT_BACKLOG_FILE);
+  const backlogItem = Array.isArray(productBacklog.items)
+    ? productBacklog.items.find(i => i.id === itemId)
+    : null;
+
+  if (backlogItem) {
+    backlogItem.status = "done";
+    saveJson(PRODUCT_BACKLOG_FILE, productBacklog);
+    console.log(`Product backlog synced: ${itemId} -> done`);
+  } else {
+    console.log(`Product backlog item not found, sync skipped: ${itemId}`);
+  }
+
+  if (sprintState.inProgress.length === 0 && sprintState.backlog.length === 0) {
+    sprintState.currentPhase = "review";
+    sprintState.status = "ready-for-review";
+  }
+
+  saveJson(SPRINT_STATE_FILE, sprintState);
+
+  console.log(`Item moved to done: ${moved.id}`);
+  console.log(`Assigned role: ${moved.assignedRole}`);
+  console.log(`Sprint state updated: ${SPRINT_STATE_FILE}`);
+}
+
+function blockItem(itemId, reason) {
+  const sprintState = readJson(SPRINT_STATE_FILE);
+  let item = sprintState.backlog.find(i => i.id === itemId);
+  let location = "backlog";
+
+  if (!item) {
+    item = sprintState.inProgress.find(i => i.id === itemId);
+    location = "inProgress";
+  }
+
+  if (!item) {
+    throw new Error(`Item not found in backlog or inProgress: ${itemId}`);
+  }
+
+  item.status = "blocked";
+  item.blockedAt = new Date().toISOString();
+
+  const existing = sprintState.impediments.find(imp => imp.itemId === itemId);
+  if (existing) {
+    existing.reason = reason;
+    existing.updatedAt = new Date().toISOString();
+  } else {
+    sprintState.impediments.push({
+      itemId,
+      reason,
+      location,
+      createdAt: new Date().toISOString()
+    });
+  }
+
+  sprintState.status = "active";
+  sprintState.currentPhase = "execution";
+
+  saveJson(SPRINT_STATE_FILE, sprintState);
+
+  console.log(`Item blocked: ${itemId}`);
+  console.log(`Reason: ${reason}`);
+  console.log(`Sprint state updated: ${SPRINT_STATE_FILE}`);
+}
+
+function unblockItem(itemId) {
+  const sprintState = readJson(SPRINT_STATE_FILE);
+
+  const backlogItem = sprintState.backlog.find(i => i.id === itemId);
+  const progressItem = sprintState.inProgress.find(i => i.id === itemId);
+  const item = backlogItem || progressItem;
+
+  if (!item) {
+    throw new Error(`Item not found in backlog or inProgress: ${itemId}`);
+  }
+
+  const impedimentIndex = sprintState.impediments.findIndex(imp => imp.itemId === itemId);
+  if (impedimentIndex === -1) {
+    throw new Error(`No impediment found for item: ${itemId}`);
+  }
+
+  sprintState.impediments.splice(impedimentIndex, 1);
+
+  if (backlogItem) {
+    backlogItem.status = "planned";
+  } else if (progressItem) {
+    progressItem.status = "in-progress";
+  }
+
+  item.unblockedAt = new Date().toISOString();
+
+  saveJson(SPRINT_STATE_FILE, sprintState);
+
+  console.log(`Item unblocked: ${itemId}`);
+  console.log(`Sprint state updated: ${SPRINT_STATE_FILE}`);
+}
+
+
+function closeReview() {
+  const sprintState = readJson(SPRINT_STATE_FILE);
+
+  if (sprintState.inProgress.length > 0 || sprintState.backlog.length > 0) {
+    throw new Error("Cannot close review while backlog or inProgress still has items");
+  }
+
+  sprintState.currentPhase = "retrospective";
+  sprintState.status = "reviewed";
+
+  saveJson(SPRINT_STATE_FILE, sprintState);
+
+  console.log("Review closed.");
+  console.log(`Sprint state updated: ${SPRINT_STATE_FILE}`);
+}
+
+
+function addReviewNote(note) {
+  const sprintState = readJson(SPRINT_STATE_FILE);
+
+  if (!Array.isArray(sprintState.reviewNotes)) {
+    sprintState.reviewNotes = [];
+  }
+
+  sprintState.reviewNotes.push({
+    note,
+    createdAt: new Date().toISOString()
+  });
+
+  sprintState.currentPhase = "review";
+  if (sprintState.status === "completed") {
+    sprintState.status = "reviewed";
+  }
+
+  saveJson(SPRINT_STATE_FILE, sprintState);
+
+  console.log("Review note added.");
+  console.log(`Sprint state updated: ${SPRINT_STATE_FILE}`);
+}
+
+function addRetroNote(note) {
+  const sprintState = readJson(SPRINT_STATE_FILE);
+
+  if (!Array.isArray(sprintState.retrospectiveNotes)) {
+    sprintState.retrospectiveNotes = [];
+  }
+
+  sprintState.retrospectiveNotes.push({
+    note,
+    createdAt: new Date().toISOString()
+  });
+
+  sprintState.currentPhase = "retrospective-complete";
+  sprintState.status = "completed";
+
+  saveJson(SPRINT_STATE_FILE, sprintState);
+
+  console.log("Retrospective note added.");
+  console.log(`Sprint state updated: ${SPRINT_STATE_FILE}`);
+}
+
+
+function setSprintPlanning(goal) {
+  if (!goal || !goal.trim()) {
+    throw new Error('Usage: node sprint-manager.js planning "SPRINT_GOAL"');
+  }
+
+  const sprintState = readJson(SPRINT_STATE_FILE);
+
+  sprintState.sprintGoal = goal.trim();
+  sprintState.status = "planned";
+  sprintState.currentPhase = "planning";
+  sprintState.generatedAt = new Date().toISOString();
+
+  saveJson(SPRINT_STATE_FILE, sprintState);
+
+  console.log("Sprint planning updated.");
+  console.log(`Sprint goal: ${sprintState.sprintGoal}`);
+  console.log(`Sprint state updated: ${SPRINT_STATE_FILE}`);
+}
+
+function showSprint() {
+  const sprintState = readJson(SPRINT_STATE_FILE);
+
+  console.log("=== Sprint State ===");
+  console.log(`sprintId: ${sprintState.sprintId}`);
+  console.log(`sprintGoal: ${sprintState.sprintGoal || ""}`);
+  console.log(`status: ${sprintState.status}`);
+  console.log(`currentPhase: ${sprintState.currentPhase}`);
+  console.log("");
+
+  console.log(`backlog: ${sprintState.backlog.length}`);
+  for (const item of sprintState.backlog) {
+    console.log(`- ${item.id} | ${item.title} | ${item.status}`);
+  }
+
+  console.log("");
+  console.log(`inProgress: ${sprintState.inProgress.length}`);
+  for (const item of sprintState.inProgress) {
+    console.log(`- ${item.id} | ${item.title} | ${item.status}`);
+  }
+
+  console.log("");
+  console.log(`done: ${sprintState.done.length}`);
+  for (const item of sprintState.done) {
+    console.log(`- ${item.id} | ${item.title} | ${item.status}`);
+  }
+
+  console.log("");
+  console.log(`impediments: ${sprintState.impediments.length}`);
+  for (const imp of sprintState.impediments) {
+    console.log(`- ${imp.itemId} | ${imp.reason} | location=${imp.location}`);
+  }
+
+  console.log("");
+  console.log(`reviewNotes: ${sprintState.reviewNotes.length}`);
+  for (const note of sprintState.reviewNotes) {
+    console.log(`- ${note.createdAt} | ${note.note}`);
+  }
+
+  console.log("");
+  console.log(`retrospectiveNotes: ${sprintState.retrospectiveNotes.length}`);
+  for (const note of sprintState.retrospectiveNotes) {
+    console.log(`- ${note.createdAt} | ${note.note}`);
+  }
+}
+
+
+function importGitHubIssues() {
+  const repo = "The-Next-Security/TNS_TRACK_DEMO";
+
+  const execSync = require("child_process").execSync;
+
+  let raw;
+  try {
+    raw = execSync(
+      `gh issue list --repo ${repo} --state open --limit 50 --json number,title,body,labels,url,updatedAt`,
+      { encoding: "utf-8" }
+    );
+  } catch (err) {
+    throw new Error("Failed to fetch GitHub issues via gh CLI");
+  }
+
+  const issues = JSON.parse(raw);
+
+  const backlog = readJson(PRODUCT_BACKLOG_FILE);
+  const items = backlog.items || [];
+
+  const existingIds = new Set(items.map(i => i.id));
+  let maxPriority = Math.max(0, ...items.map(i => i.priority || 0));
+
+  const newItems = [];
+
+  for (const issue of issues) {
+    const issueId = `GH-${issue.number}`;
+    if (existingIds.has(issueId)) continue;
+
+    const labels = (issue.labels || []).map(l => l.name);
+    const type = labels.includes("bug") ? "bug" : "story";
+
+    const body = (issue.body || "").trim();
+    const shortBody = body.slice(0, 500) + (body.length > 500 ? "..." : "");
+
+    maxPriority += 1;
+
+    newItems.push({
+      id: issueId,
+      title: issue.title,
+      type,
+      priority: maxPriority,
+      status: "planned",
+      assignedRole: "product-owner",
+      description:
+        `Imported from GitHub issue #${issue.number} in ${repo}.
+` +
+        `URL: ${issue.url}
+` +
+        `Labels: ${labels.join(", ") || "none"}
+
+` +
+        shortBody,
+      definitionOfDone: [
+        "issue imported into local product backlog",
+        "work item reviewed by product-owner",
+        "implementation approach defined",
+        "item ready for sprint selection"
+      ],
+      source: "github-issue",
+      repo,
+      issueNumber: issue.number,
+      issueUrl: issue.url,
+      labels,
+      updatedAt: issue.updatedAt
+    });
+  }
+
+  backlog.items.push(...newItems);
+  saveJson(PRODUCT_BACKLOG_FILE, backlog);
+
+  console.log(`GitHub issues imported: ${newItems.length}`);
+  console.log(`Product backlog updated: ${PRODUCT_BACKLOG_FILE}`);
+}
+
+function dailySummary() {
+  const sprintState = readJson(SPRINT_STATE_FILE);
+
+  console.log("=== Daily Scrum Summary ===");
+  console.log(`Sprint: ${sprintState.sprintId}`);
+  console.log(`Goal: ${sprintState.sprintGoal}`);
+  console.log(`Status: ${sprintState.status}`);
+  console.log(`Phase: ${sprintState.currentPhase}`);
+  console.log("");
+
+  console.log(`Completed yesterday-equivalent: ${sprintState.done.length}`);
+  for (const item of sprintState.done) {
+    console.log(`- DONE | ${item.id} | ${item.title} | role=${item.assignedRole}`);
+  }
+
+  console.log("");
+  console.log(`In progress today: ${sprintState.inProgress.length}`);
+  for (const item of sprintState.inProgress) {
+    console.log(`- IN-PROGRESS | ${item.id} | ${item.title} | role=${item.assignedRole}`);
+  }
+
+  console.log("");
+  console.log(`Up next: ${sprintState.backlog.length}`);
+  for (const item of sprintState.backlog) {
+    console.log(`- TODO | ${item.id} | ${item.title} | role=${item.assignedRole} | status=${item.status}`);
+  }
+
+  console.log("");
+  console.log(`Impediments: ${sprintState.impediments.length}`);
+  for (const impediment of sprintState.impediments) {
+    console.log(`- BLOCKED | ${impediment.itemId} | ${impediment.reason}`);
+  }
+
+  console.log("");
+  if (sprintState.impediments.length > 0) {
+    console.log("Suggested focus: resolve impediments before pulling more work.");
+  } else if (sprintState.inProgress.length > 0) {
+    console.log("Suggested focus: finish current in-progress work before starting new items.");
+  } else if (sprintState.backlog.length > 0) {
+    const nextItem = sprintState.backlog.find(i => i.status !== "blocked");
+    if (nextItem) {
+      console.log(`Suggested focus: start next highest-priority item -> ${nextItem.id} (${nextItem.title})`);
+    } else {
+      console.log("Suggested focus: all remaining backlog items are blocked.");
+    }
+  } else if (sprintState.status === "ready-for-review") {
+    console.log("Suggested focus: conduct sprint review and retrospective.");
+  } else {
+    console.log("Suggested focus: sprint closed; prepare the next sprint.");
+  }
+}
+
+
+function archiveCurrentSprint() {
+  const sprint = readJson(SPRINT_STATE_FILE);
+
+  if (!sprint.sprintId) {
+    throw new Error("sprint-state.json inválido: falta sprintId");
+  }
+
+  const historyDir = `${SCRUM_DIR}/sprint-history`;
+  fs.mkdirSync(historyDir, { recursive: true });
+
+  const archiveFile = `${historyDir}/${sprint.sprintId}.json`;
+
+  if (fs.existsSync(archiveFile)) {
+    throw new Error(`El archivo de historial ya existe: ${archiveFile}`);
+  }
+
+  fs.writeFileSync(archiveFile, JSON.stringify(sprint, null, 2));
+  console.log(`[OK] Sprint archivado: ${archiveFile}`);
+}
+
+function buildNextSprintFromCurrent(currentSprint) {
+  const match = String(currentSprint.sprintId || "").match(/^(.*-)(\d+)$/);
+  if (!match) {
+    throw new Error(`Formato de sprintId no soportado: ${currentSprint.sprintId}`);
+  }
+
+  const prefix = match[1];
+  const currentNumber = parseInt(match[2], 10);
+  const nextNumber = String(currentNumber + 1).padStart(match[2].length, "0");
+
+  const carryOverBacklog = Array.isArray(currentSprint.backlog) ? currentSprint.backlog : [];
+  const carryOverInProgress = Array.isArray(currentSprint.inProgress)
+    ? currentSprint.inProgress.map(item => ({
+        ...item,
+        status: "planned"
+      }))
+    : [];
+
+  return {
+    generatedAt: new Date().toISOString(),
+    sprintId: `${prefix}${nextNumber}`,
+    sprintGoal: "",
+    status: "planned",
+    currentPhase: "planning",
+    backlog: [...carryOverBacklog, ...carryOverInProgress],
+    inProgress: [],
+    done: [],
+    impediments: [],
+    reviewNotes: [],
+    retrospectiveNotes: []
+  };
+}
+
+function nextSprint() {
+  const currentSprint = readJson(SPRINT_STATE_FILE);
+
+  archiveCurrentSprint();
+
+  const nextSprintState = buildNextSprintFromCurrent(currentSprint);
+  saveJson(SPRINT_STATE_FILE, nextSprintState);
+
+  console.log(`[OK] Nuevo sprint activo: ${nextSprintState.sprintId}`);
+}
+
+
+function showSprintHistory() {
+  const historyDir = `${SCRUM_DIR}/sprint-history`;
+
+  if (!fs.existsSync(historyDir)) {
+    console.log("[INFO] No existe sprint-history todavía");
+    return;
+  }
+
+  const files = fs.readdirSync(historyDir)
+    .filter(name => name.endsWith(".json"))
+    .sort();
+
+  if (files.length === 0) {
+    console.log("[INFO] No hay sprints archivados");
+    return;
+  }
+
+  console.log("=== SPRINT HISTORY ===");
+
+  files.forEach(file => {
+    const fullPath = `${historyDir}/${file}`;
+    const sprint = readJson(fullPath);
+
+    const sprintId = sprint.sprintId || file.replace(/\.json$/, "");
+    const status = sprint.status || "unknown";
+    const goal = sprint.sprintGoal || "";
+    const doneCount = Array.isArray(sprint.done) ? sprint.done.length : 0;
+    const backlogCount = Array.isArray(sprint.backlog) ? sprint.backlog.length : 0;
+    const inProgressCount = Array.isArray(sprint.inProgress) ? sprint.inProgress.length : 0;
+
+    console.log(`${sprintId} | status=${status} | done=${doneCount} | backlog=${backlogCount} | inProgress=${inProgressCount} | goal=${goal}`);
+  });
+}
+
+
+function showSprintHistoryDetail(sprintId) {
+  if (!sprintId) {
+    throw new Error("Usage: node sprint-manager.js history-detail <SPRINT_ID>");
+  }
+
+  const historyDir = `${SCRUM_DIR}/sprint-history`;
+  const filePath = `${historyDir}/${sprintId}.json`;
+
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`Sprint archivado no encontrado: ${sprintId}`);
+  }
+
+  const sprint = readJson(filePath);
+  console.log(JSON.stringify(sprint, null, 2));
+}
+
+function main() {
+  const command = process.argv[2];
+
+  if (!command) {
+    console.error("ERROR: No command provided.");
+    console.error("Usage: node sprint-manager.js <command>");
+    process.exit(1);
+  }
+
+  if (command === "init") {
+    initializeSprint();
+    return;
+  }
+
+  if (command === "start") {
+    const itemId = process.argv[3];
+    if (!itemId) {
+      throw new Error("Usage: node sprint-manager.js start <ITEM_ID>");
+    }
+    startItem(itemId);
+    return;
+  }
+
+  if (command === "complete") {
+    const itemId = process.argv[3];
+    if (!itemId) {
+      throw new Error("Usage: node sprint-manager.js complete <ITEM_ID>");
+    }
+    completeItem(itemId);
+    return;
+  }
+
+  if (command === "block") {
+    const itemId = process.argv[3];
+    const reason = process.argv.slice(4).join(" ").trim();
+    if (!itemId || !reason) {
+      throw new Error('Usage: node sprint-manager.js block <ITEM_ID> "reason"');
+    }
+    blockItem(itemId, reason);
+    return;
+  }
+
+  if (command === "unblock") {
+    const itemId = process.argv[3];
+    if (!itemId) {
+      throw new Error("Usage: node sprint-manager.js unblock <ITEM_ID>");
+    }
+    unblockItem(itemId);
+    return;
+  }
+
+  if (command === "review") {
+    const note = process.argv.slice(3).join(" ").trim();
+    if (!note) {
+      throw new Error('Usage: node sprint-manager.js review "note"');
+    }
+    addReviewNote(note);
+    return;
+  }
+
+  if (command === "review-close") {
+    closeReview();
+    return;
+  }
+
+  if (command === "retro") {
+    const note = process.argv.slice(3).join(" ").trim();
+    if (!note) {
+      throw new Error('Usage: node sprint-manager.js retro "note"');
+    }
+    addRetroNote(note);
+    return;
+  }
+
+
+  if (command === "show") {
+    showSprint();
+    return;
+  }
+
+  
+  if (command === "import-github") {
+    importGitHubIssues();
+    return;
+  }
+
+if (command === "select") {
+    const rawLimit = process.argv[3];
+    const limit = Number(rawLimit);
+
+    if (!rawLimit || !Number.isInteger(limit) || limit <= 0) {
+      throw new Error("Usage: node sprint-manager.js select <POSITIVE_INTEGER>");
+    }
+
+    selectPlannedItemsIntoActiveSprint(limit);
+    return;
+  }
+
+  if (command === "planning") {
+    const goal = process.argv.slice(3).join(" ").trim();
+    if (!goal) {
+      throw new Error('Usage: node sprint-manager.js planning "SPRINT_GOAL"');
+    }
+    setSprintPlanning(goal);
+    return;
+  }
+
+  if (command === "daily") {
+    dailySummary();
+    return;
+  }
+
+  if (command === "history") {
+    showSprintHistory();
+    return;
+  }
+
+  if (command === "history-detail") {
+    const sprintId = process.argv[3];
+    if (!sprintId) {
+      throw new Error("Usage: node sprint-manager.js history-detail <SPRINT_ID>");
+    }
+    showSprintHistoryDetail(sprintId);
+    return;
+  }
+
+  if (command === "next-sprint") {
+    nextSprint();
+    return;
+  }
+
+  throw new Error(`Unknown command: ${command}`);
+}
+
+try {
+  main();
+} catch (error) {
+  console.error("ERROR:", error.message);
+  process.exit(1);
+}

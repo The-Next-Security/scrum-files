@@ -1,0 +1,30 @@
+{
+  "generatedAt": "2026-04-19T16:14:52.068Z",
+  "sprintId": "sprint-002",
+  "sprintGoal": "",
+  "status": "planned",
+  "currentPhase": "planning",
+  "backlog": [
+    {
+      "id": "TEST-BL-001",
+      "title": "Carry-over desde backlog",
+      "priority": 1,
+      "status": "planned",
+      "assignedRole": "product-owner"
+    }
+  ],
+  "inProgress": [
+    {
+      "id": "TEST-IP-001",
+      "title": "Carry-over desde inProgress",
+      "priority": 2,
+      "status": "in-progress",
+      "assignedRole": "coding-agent",
+      "startedAt": "2026-04-19T16:20:00.000Z"
+    }
+  ],
+  "done": [],
+  "impediments": [],
+  "reviewNotes": [],
+  "retrospectiveNotes": []
+}

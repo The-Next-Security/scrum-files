@@ -1,0 +1,32 @@
+{
+  "generatedAt": "2026-04-19T22:49:02.566Z",
+  "sprintId": "sprint-006",
+  "sprintGoal": "",
+  "status": "planned",
+  "currentPhase": "planning",
+  "backlog": [
+    {
+      "id": "GH-32",
+      "title": "fix: migrar parametrizaciones → ubi_presets_temperatura en beacons y telConfig",
+      "type": "bug",
+      "priority": 18,
+      "status": "planned",
+      "assignedRole": "product-owner",
+      "sourceStatus": "planned"
+    },
+    {
+      "id": "GH-26",
+      "title": "Desarrollar endpoints necesarios para vistas de Sectores y Beacons",
+      "type": "story",
+      "priority": 19,
+      "status": "planned",
+      "assignedRole": "product-owner",
+      "sourceStatus": "planned"
+    }
+  ],
+  "inProgress": [],
+  "done": [],
+  "impediments": [],
+  "reviewNotes": [],
+  "retrospectiveNotes": []
+}

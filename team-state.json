@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-04-19T22:46:08.902Z",
+  "scrumMaster": "scrum-master",
+  "productOwner": "product-owner",
+  "developmentTeam": [
+    "backend-developer",
+    "coding-agent",
+    "documentation-expert",
+    "frontend-developer",
+    "git-expert",
+    "github-manager",
+    "qa-analyst",
+    "ux-developer"
+  ],
+  "teamSize": 8,
+  "readiness": {
+    "scrumMasterReady": true,
+    "productOwnerReady": true,
+    "developmentTeamReady": true
+  }
+}

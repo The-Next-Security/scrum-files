@@ -1,0 +1,51 @@
+{
+  "generatedAt": "2026-04-19T22:08:44.331Z",
+  "sprintId": "sprint-005",
+  "sprintGoal": "Importar issues reales desde GitHub y corregir inconsistencias clave del motor Scrum para habilitar operación autónoma sobre trabajo real",
+  "status": "completed",
+  "currentPhase": "retrospective-complete",
+  "backlog": [],
+  "inProgress": [],
+  "done": [
+    {
+      "id": "GH-83",
+      "title": "[BUG] Vista de horarios base muestra 32 entradas planas sin agrupar",
+      "priority": 15,
+      "status": "done",
+      "assignedRole": "product-owner",
+      "sourceStatus": "planned",
+      "completedAt": "2026-04-19T22:47:59.639550+00:00"
+    },
+    {
+      "id": "GH-46",
+      "title": "[BUG] Warning Critical dependency en react-datepicker por require() dinámico",
+      "priority": 16,
+      "status": "done",
+      "assignedRole": "product-owner",
+      "sourceStatus": "planned",
+      "completedAt": "2026-04-19T22:47:59.639550+00:00"
+    },
+    {
+      "id": "GH-33",
+      "title": "fix: updateChannelThresholds fallará en runtime — threshold_min/max no existen en ubi_canal",
+      "priority": 17,
+      "status": "done",
+      "assignedRole": "product-owner",
+      "sourceStatus": "planned",
+      "completedAt": "2026-04-19T22:47:59.639550+00:00"
+    }
+  ],
+  "impediments": [],
+  "reviewNotes": [
+    {
+      "note": "Sprint 005 validó importación read-only desde GitHub, selección controlada por cantidad, ejecución sobre issues reales y sincronización automática al product backlog",
+      "createdAt": "2026-04-19T22:47:59.639550+00:00"
+    }
+  ],
+  "retrospectiveNotes": [
+    {
+      "note": "Se consolidó un flujo Scrum mucho más cercano a operación real; siguiente paso: automatizar importación/priorización continua y reducir intervención manual residual",
+      "createdAt": "2026-04-19T22:47:59.639550+00:00"
+    }
+  ]
+}
