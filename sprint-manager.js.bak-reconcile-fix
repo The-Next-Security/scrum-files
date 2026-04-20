@@ -724,9 +724,7 @@ function getExpectedScrumLabelForStatus(status) {
   return SCRUM_LABELS[status] || null;
 }
 
-function reconcileGitHubScrumMirror(options = {}) {
-  const fix = options.fix || false;
-  const dryRun = options.dryRun || false;
+function reconcileGitHubScrumMirror() {
   const backlog = readJson(PRODUCT_BACKLOG_FILE);
   const items = Array.isArray(backlog.items) ? backlog.items : [];
 
@@ -742,18 +740,10 @@ function reconcileGitHubScrumMirror(options = {}) {
   let multiple = 0;
   let mismatch = 0;
   let skipped = 0;
-  let fixed = 0;
-  let fixFailed = 0;
 
-  console.log(`=== GITHUB SCRUM RECONCILE${fix ? " --fix" : ""} ===`);
+  console.log("=== GITHUB SCRUM RECONCILE ===");
 
   for (const item of githubItems) {
-    if (item.state === "closed" || item.closed === true) {
-      console.log(`SKIP | ${item.id} | reason=issue_closed`);
-      skipped += 1;
-      continue;
-    }
-
     const expectedLabel = getExpectedScrumLabelForStatus(item.status);
 
     if (!expectedLabel) {
@@ -777,44 +767,12 @@ function reconcileGitHubScrumMirror(options = {}) {
       if (scrumLabels.length === 0) {
         console.log(`MISSING_LABEL | ${item.id} | status=${item.status} | expected=${expectedLabel} | actual=[]`);
         missing += 1;
-
-        if (fix) {
-          try {
-            if (dryRun) {
-              console.log(`DRY_RUN_FIX | ${item.id} | would_sync_label | status=${item.status}`);
-            } else {
-              syncGitHubIssueScrumLabel(item, item.status);
-              console.log(`FIXED | ${item.id} | action=apply_expected_label | label=${expectedLabel}`);
-              fixed += 1;
-            }
-          } catch (fixError) {
-            console.log(`FIX_FAILED | ${item.id} | action=apply_expected_label | reason=${fixError.message}`);
-            fixFailed += 1;
-          }
-        }
-
         continue;
       }
 
       if (scrumLabels.length > 1) {
         console.log(`MULTIPLE_SCRUM_LABELS | ${item.id} | status=${item.status} | expected=${expectedLabel} | actual=${scrumLabels.join(",")}`);
         multiple += 1;
-
-        if (fix) {
-          try {
-            if (dryRun) {
-              console.log(`DRY_RUN_FIX | ${item.id} | would_sync_label | status=${item.status}`);
-            } else {
-              syncGitHubIssueScrumLabel(item, item.status);
-              console.log(`FIXED | ${item.id} | action=normalize_single_scrum_label | label=${expectedLabel}`);
-              fixed += 1;
-            }
-          } catch (fixError) {
-            console.log(`FIX_FAILED | ${item.id} | action=normalize_single_scrum_label | reason=${fixError.message}`);
-            fixFailed += 1;
-          }
-        }
-
         continue;
       }
 
@@ -823,22 +781,6 @@ function reconcileGitHubScrumMirror(options = {}) {
       if (actualLabel !== expectedLabel) {
         console.log(`MISMATCH | ${item.id} | status=${item.status} | expected=${expectedLabel} | actual=${actualLabel}`);
         mismatch += 1;
-
-        if (fix) {
-          try {
-            if (dryRun) {
-              console.log(`DRY_RUN_FIX | ${item.id} | would_sync_label | status=${item.status}`);
-            } else {
-              syncGitHubIssueScrumLabel(item, item.status);
-              console.log(`FIXED | ${item.id} | action=replace_scrum_label | from=${actualLabel} | to=${expectedLabel}`);
-              fixed += 1;
-            }
-          } catch (fixError) {
-            console.log(`FIX_FAILED | ${item.id} | action=replace_scrum_label | reason=${fixError.message}`);
-            fixFailed += 1;
-          }
-        }
-
         continue;
       }
 
@@ -857,11 +799,6 @@ function reconcileGitHubScrumMirror(options = {}) {
   console.log(`multiple=${multiple}`);
   console.log(`mismatch=${mismatch}`);
   console.log(`skipped=${skipped}`);
-
-  if (fix) {
-    console.log(`fixed=${fixed}`);
-    console.log(`fixFailed=${fixFailed}`);
-  }
 }
     
 function importGitHubIssues() {
@@ -1219,9 +1156,7 @@ function main() {
   }
 
   if (command === "reconcile") {
-    const fix = process.argv.includes("--fix");
-    const dryRun = process.argv.includes("--dry-run");
-    reconcileGitHubScrumMirror({ fix, dryRun });
+    reconcileGitHubScrumMirror();
     return;
   }
 
