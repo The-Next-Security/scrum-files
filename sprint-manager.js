@@ -273,6 +273,7 @@ function startItem(itemId) {
 
   if (backlogItem) {
     backlogItem.status = "in-progress";
+    backlogItem.startedAt = moved.startedAt;
     saveJson(PRODUCT_BACKLOG_FILE, productBacklog);
     writeBackGitHubIssueEvent(backlogItem, "start", sprintState.sprintId);
     console.log(`Product backlog synced: ${itemId} -> in-progress`);
@@ -313,6 +314,7 @@ function completeItem(itemId) {
 
   if (backlogItem) {
     backlogItem.status = "done";
+    backlogItem.completedAt = moved.completedAt;
     saveJson(PRODUCT_BACKLOG_FILE, productBacklog);
     writeBackGitHubIssueEvent(backlogItem, "complete", sprintState.sprintId);
     console.log(`Product backlog synced: ${itemId} -> done`);
@@ -416,7 +418,10 @@ function unblockItem(itemId) {
     throw new Error(`No impediment found for item: ${itemId}`);
   }
 
-  sprintState.impediments.splice(impedimentIndex, 1);
+  const [resolved] = sprintState.impediments.splice(impedimentIndex, 1);
+  resolved.resolvedAt = new Date().toISOString();
+  if (!sprintState.impedimentHistory) sprintState.impedimentHistory = [];
+  sprintState.impedimentHistory.push(resolved);
 
   const restoredStatus = item.previousStatus || (backlogItem ? "in-sprint" : "in-progress");
   item.status = restoredStatus;
