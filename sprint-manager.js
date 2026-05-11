@@ -5,6 +5,28 @@ const SCRUM_DIR = "/root/.openclaw/scrum";
 const TEAM_STATE_FILE = `${SCRUM_DIR}/team-state.json`;
 const SPRINT_STATE_FILE = `${SCRUM_DIR}/sprint-state.json`;
 const PRODUCT_BACKLOG_FILE = `${SCRUM_DIR}/product-backlog.json`;
+const REPOS_CATALOG_FILE = `${SCRUM_DIR}/repos-catalog.json`;
+
+const SEVERITY_LABELS = [
+  "severity: blocker",
+  "severity: major",
+  "severity: minor",
+  "severity: cosmetic"
+];
+
+const SEVERITY_ORDER = {
+  "severity: blocker": 1,
+  "severity: major":   2,
+  "severity: minor":   3,
+  "severity: cosmetic": 4
+};
+
+const EXCLUDED_REPOS = [
+  "The-Next-Security/autonomous-workbench",
+  "The-Next-Security/scrum-files",
+  "The-Next-Security/tns-openclaw-agents",
+  "The-Next-Security/agents-files"
+];
 
 const SCRUM_LABELS = {
   imported: "scrum:imported",
@@ -116,22 +138,22 @@ function selectSprintBacklog(plannedItems, limit) {
       item
     }))
     .sort((a, b) => {
+      // Primary: severity (blocker=1 > major=2 > minor=3 > cosmetic=4 > none=5)
+      const sevA = a.item.severity ? (SEVERITY_ORDER[a.item.severity] || 5) : 5;
+      const sevB = b.item.severity ? (SEVERITY_ORDER[b.item.severity] || 5) : 5;
+      if (sevA !== sevB) return sevA - sevB;
+
+      // Secondary: bugs before stories within same severity
       const aType = typeof a.item.type === "string" ? a.item.type.toLowerCase() : "story";
       const bType = typeof b.item.type === "string" ? b.item.type.toLowerCase() : "story";
-
       const aBugRank = aType === "bug" ? 0 : 1;
       const bBugRank = bType === "bug" ? 0 : 1;
+      if (aBugRank !== bBugRank) return aBugRank - bBugRank;
 
-      if (aBugRank !== bBugRank) {
-        return aBugRank - bBugRank;
-      }
-
+      // Tertiary: lower priority number = higher priority (older issues first)
       const aPriority = Number.isFinite(a.item.priority) ? a.item.priority : Number.MAX_SAFE_INTEGER;
       const bPriority = Number.isFinite(b.item.priority) ? b.item.priority : Number.MAX_SAFE_INTEGER;
-
-      if (aPriority !== bPriority) {
-        return aPriority - bPriority;
-      }
+      if (aPriority !== bPriority) return aPriority - bPriority;
 
       return a.originalIndex - b.originalIndex;
     })
@@ -613,15 +635,7 @@ function assertGitHubIssueRepoMatchesWorkspace(backlogItem) {
   if (!backlogItem || backlogItem.source !== "github-issue") {
     return null;
   }
-
-  const workspaceRepo = resolveGitHubRepoFromOrigin();
-  if (backlogItem.repo !== workspaceRepo) {
-    throw new Error(
-      `GitHub repo mismatch for ${backlogItem.id}: item repo=${backlogItem.repo}, workspace repo=${workspaceRepo}`
-    );
-  }
-
-  return workspaceRepo;
+  return backlogItem.repo || null;
 }
 
 function listScrumLabelsForIssue(repo, issueNumber) {
@@ -869,79 +883,248 @@ function reconcileGitHubScrumMirror(options = {}) {
   }
 }
     
-function importGitHubIssues() {
-  const repo = resolveGitHubRepoFromOrigin();
+function getSeverityLabel(labels) {
+  if (!Array.isArray(labels)) return null;
+  for (const sl of SEVERITY_LABELS) {
+    if (labels.includes(sl)) return sl;
+  }
+  return null;
+}
 
+function ensureSeverityLabels(repo) {
   const execSync = require("child_process").execSync;
+  const defs = [
+    { name: "severity: blocker",  color: "B60205", desc: "Blocks all progress, no workaround" },
+    { name: "severity: major",    color: "E4E669", desc: "Significant issue, workaround exists but costly" },
+    { name: "severity: minor",    color: "0075CA", desc: "Low impact, does not block daily work" },
+    { name: "severity: cosmetic", color: "0E8A16", desc: "Visual or UX issue, no functional impact" }
+  ];
+  for (const def of defs) {
+    try {
+      execSync(
+        `gh label create ${escapeShellArg(def.name)} --repo ${repo} --color ${escapeShellArg(def.color)} --description ${escapeShellArg(def.desc)} --force`,
+        { encoding: "utf-8", stdio: "pipe" }
+      );
+      console.log(`  Label ensured: ${def.name}`);
+    } catch (err) {
+      console.log(`  Label warning (${def.name}): ${String(err.message).slice(0, 120)}`);
+    }
+  }
+}
 
-  let raw;
-  try {
-    raw = execSync(
-      `gh issue list --repo ${repo} --state open --limit 50 --json number,title,body,labels,url,updatedAt`,
-      { encoding: "utf-8" }
-    );
-  } catch (err) {
-    throw new Error("Failed to fetch GitHub issues via gh CLI");
+function readCatalog() {
+  if (!fs.existsSync(REPOS_CATALOG_FILE)) {
+    return { version: 1, excludedRepos: EXCLUDED_REPOS, repos: [] };
+  }
+  return readJson(REPOS_CATALOG_FILE);
+}
+
+function saveCatalog(catalog) {
+  catalog.updatedAt = new Date().toISOString();
+  saveJson(REPOS_CATALOG_FILE, catalog);
+}
+
+function addRepo(repoFullName) {
+  if (!repoFullName || !repoFullName.includes("/")) {
+    throw new Error("Usage: node sprint-manager.js add-repo <owner/repo>");
+  }
+  repoFullName = repoFullName
+    .replace(/\.git$/, "")
+    .replace(/^https?:\/\/github\.com\//, "");
+
+  if (EXCLUDED_REPOS.includes(repoFullName)) {
+    throw new Error(`Repo ${repoFullName} is excluded (system/infrastructure repo)`);
   }
 
-  const issues = JSON.parse(raw);
+  const catalog = readCatalog();
+  const existing = catalog.repos.find(r => r.repo === repoFullName);
+
+  if (existing) {
+    if (existing.status === "active") {
+      console.log(`Repo already active in catalog: ${repoFullName}`);
+      return;
+    }
+    existing.status = "active";
+    existing.reactivatedAt = new Date().toISOString();
+    saveCatalog(catalog);
+    console.log(`Repo reactivated: ${repoFullName}`);
+    return;
+  }
+
+  console.log(`Adding repo: ${repoFullName}`);
+  console.log("Creating severity labels...");
+  ensureSeverityLabels(repoFullName);
+
+  catalog.repos.push({
+    repo: repoFullName,
+    status: "active",
+    addedAt: new Date().toISOString(),
+    firstImportDone: false,
+    lastImportAt: null
+  });
+  saveCatalog(catalog);
+
+  console.log(`Repo added to catalog: ${repoFullName}`);
+  console.log("Next sprint-pickup will import all open issues from this repo.");
+}
+
+function listRepos() {
+  const catalog = readCatalog();
+  if (!catalog.repos || catalog.repos.length === 0) {
+    console.log("No repos in catalog. Use: node sprint-manager.js add-repo <owner/repo>");
+    return;
+  }
+  console.log("=== Repos Catalog ===");
+  for (const r of catalog.repos) {
+    const lastImport = r.lastImportAt ? r.lastImportAt.slice(0, 10) : "never";
+    const firstDone = r.firstImportDone ? "yes" : "pending";
+    console.log(`${r.status.toUpperCase().padEnd(8)} | ${r.repo.padEnd(45)} | added=${r.addedAt.slice(0, 10)} | last_import=${lastImport} | first_import=${firstDone}`);
+  }
+  console.log(`\nExcluded (system repos):`);
+  for (const e of (catalog.excludedRepos || EXCLUDED_REPOS)) {
+    console.log(`  - ${e}`);
+  }
+}
+
+function removeRepo(repoFullName) {
+  if (!repoFullName) {
+    throw new Error("Usage: node sprint-manager.js remove-repo <owner/repo>");
+  }
+  const catalog = readCatalog();
+  const entry = catalog.repos.find(r => r.repo === repoFullName);
+  if (!entry) {
+    throw new Error(`Repo not found in catalog: ${repoFullName}`);
+  }
+  entry.status = "inactive";
+  entry.removedAt = new Date().toISOString();
+  saveCatalog(catalog);
+  console.log(`Repo marked inactive: ${repoFullName}`);
+}
+
+function importGitHubIssues() {
+  const execSync = require("child_process").execSync;
+  const catalog = readCatalog();
+  const activeRepos = (catalog.repos || []).filter(r => r.status === "active");
+
+  if (activeRepos.length === 0) {
+    console.log("No active repos in catalog. Use: node sprint-manager.js add-repo <owner/repo>");
+    return;
+  }
 
   const backlog = readJson(PRODUCT_BACKLOG_FILE);
   const items = backlog.items || [];
-
   const existingIds = new Set(items.map(i => i.id));
-  let maxPriority = Math.max(0, ...items.map(i => i.priority || 0));
 
-  const newItems = [];
+  let totalImported = 0;
+  const needsSeverityAnalysis = [];
 
-  for (const issue of issues) {
-    const issueId = `GH-${issue.number}`;
-    if (existingIds.has(issueId)) continue;
+  for (const repoEntry of activeRepos) {
+    const repo = repoEntry.repo;
+    const isFirstImport = !repoEntry.firstImportDone;
 
-    const labels = (issue.labels || []).map(l => l.name);
-    const type = labels.includes("bug") ? "bug" : "story";
+    console.log(`\nProcessing: ${repo} (first_import=${isFirstImport})`);
 
-    const body = (issue.body || "").trim();
-    const shortBody = body.slice(0, 500) + (body.length > 500 ? "..." : "");
+    let raw;
+    try {
+      raw = execSync(
+        `gh issue list --repo ${repo} --state open --limit 100 --json number,title,body,labels,url,createdAt,updatedAt,comments`,
+        { encoding: "utf-8" }
+      );
+    } catch (err) {
+      console.log(`  ERROR fetching issues from ${repo}: ${String(err.message).slice(0, 200)}`);
+      continue;
+    }
 
-    maxPriority += 1;
+    const issues = JSON.parse(raw);
+    const newItems = [];
 
-    newItems.push({
-      id: issueId,
-      title: issue.title,
-      type,
-      priority: maxPriority,
-      status: "imported",
-      assignedRole: "product-owner",
-      description:
-        `Imported from GitHub issue #${issue.number} in ${repo}.
-` +
-        `URL: ${issue.url}
-` +
-        `Labels: ${labels.join(", ") || "none"}
+    for (const issue of issues) {
+      const issueId = `${repo}#${issue.number}`;
+      if (existingIds.has(issueId)) continue;
 
-` +
-        shortBody,
-      definitionOfDone: [
-        "issue imported into local product backlog",
-        "work item reviewed by product-owner",
-        "implementation approach defined",
-        "item ready for sprint selection"
-      ],
-      source: "github-issue",
-      repo,
-      issueNumber: issue.number,
-      issueUrl: issue.url,
-      labels,
-      updatedAt: issue.updatedAt
-    });
+      const labels = (issue.labels || []).map(l => l.name);
+      const type = labels.includes("bug") ? "bug" : "story";
+      const severityLabel = getSeverityLabel(labels);
+      // priority encodes severity tier + issue number for natural sort
+      const severityTier = severityLabel ? SEVERITY_ORDER[severityLabel] : 5;
+      const priority = severityTier * 10000 + issue.number;
+
+      const body = (issue.body || "").trim();
+      const shortBody = body.slice(0, 500) + (body.length > 500 ? "..." : "");
+      const commentCount = Array.isArray(issue.comments) ? issue.comments.length : 0;
+
+      newItems.push({
+        id: issueId,
+        title: issue.title,
+        type,
+        priority,
+        severity: severityLabel,
+        status: "imported",
+        assignedRole: "product-owner",
+        description:
+          `Imported from GitHub issue #${issue.number} in ${repo}.\n` +
+          `URL: ${issue.url}\n` +
+          `Labels: ${labels.join(", ") || "none"}\n` +
+          `Comments at import: ${commentCount}\n\n` +
+          shortBody,
+        definitionOfDone: [
+          "severity label verified",
+          "full issue context read (body + all comments)",
+          "work item reviewed by product-owner",
+          "implementation approach defined",
+          "item ready for sprint selection"
+        ],
+        source: "github-issue",
+        repo,
+        issueNumber: issue.number,
+        issueUrl: issue.url,
+        labels,
+        commentCount,
+        createdAt: issue.createdAt,
+        updatedAt: issue.updatedAt,
+        importedAt: new Date().toISOString(),
+        firstImport: isFirstImport
+      });
+
+      existingIds.add(issueId);
+
+      if (!severityLabel) {
+        needsSeverityAnalysis.push({
+          id: issueId,
+          repo,
+          issueNumber: issue.number,
+          title: issue.title,
+          url: issue.url,
+          commentCount
+        });
+      }
+    }
+
+    backlog.items.push(...newItems);
+    totalImported += newItems.length;
+    repoEntry.lastImportAt = new Date().toISOString();
+    if (isFirstImport) repoEntry.firstImportDone = true;
+
+    console.log(`  Imported: ${newItems.length} new issues`);
   }
 
-  backlog.items.push(...newItems);
   saveJson(PRODUCT_BACKLOG_FILE, backlog);
+  saveCatalog(catalog);
 
-  console.log(`GitHub issues imported: ${newItems.length}`);
+  console.log(`\nTotal issues imported: ${totalImported}`);
   console.log(`Product backlog updated: ${PRODUCT_BACKLOG_FILE}`);
+
+  if (needsSeverityAnalysis.length > 0) {
+    console.log(`\n=== NEEDS_SEVERITY_ANALYSIS: ${needsSeverityAnalysis.length} issues ===`);
+    console.log("These issues have no severity label. For EACH: read full context (body + all comments), then apply label and comment.");
+    for (const item of needsSeverityAnalysis) {
+      console.log(`NEEDS_SEVERITY_ANALYSIS | ${item.id} | repo=${item.repo} | issue=${item.issueNumber} | comments=${item.commentCount} | title=${JSON.stringify(item.title)} | url=${item.url}`);
+    }
+    console.log("\nFor each issue above, run in order:");
+    console.log('  1. gh issue view <n> --repo <owner/repo> --comments   # read body + ALL existing comments');
+    console.log('  2. gh issue edit <n> --repo <owner/repo> --add-label "severity: <level>"');
+    console.log('  3. gh issue comment <n> --repo <owner/repo> --body "OpenClaw: propuesta de severidad [nivel] — [razonamiento basado en el contexto leído]. Por favor confirma o ajusta."');
+  }
 }
 
 
@@ -1163,6 +1346,36 @@ function showSprintHistoryDetail(sprintId) {
   console.log(JSON.stringify(sprint, null, 2));
 }
 
+function showBacklog() {
+  const backlog = readJson(PRODUCT_BACKLOG_FILE);
+  const items = Array.isArray(backlog.items) ? backlog.items : [];
+
+  const counts = {};
+  for (const item of items) {
+    counts[item.status] = (counts[item.status] || 0) + 1;
+  }
+
+  console.log("=== Product Backlog ===");
+  console.log(`Total items: ${items.length}`);
+  for (const [status, count] of Object.entries(counts)) {
+    console.log(`  ${status}: ${count}`);
+  }
+  console.log("");
+
+  const ORDER = ["imported", "planned", "in-sprint", "in-progress", "blocked", "done"];
+  for (const status of ORDER) {
+    const statusItems = items.filter(i => i.status === status);
+    if (statusItems.length === 0) continue;
+    console.log(`--- ${status.toUpperCase()} (${statusItems.length}) ---`);
+    for (const item of statusItems) {
+      const sev = item.severity ? `[${item.severity}]` : "[no-severity]";
+      const repo = item.repo ? ` (${item.repo})` : "";
+      console.log(`  ${item.id} | ${sev} | ${item.title}${repo}`);
+    }
+    console.log("");
+  }
+}
+
 function main() {
   const command = process.argv[2];
 
@@ -1265,7 +1478,35 @@ function main() {
     return;
   }
 
-if (command === "select") {
+  if (command === "add-repo") {
+    const repo = process.argv[3];
+    if (!repo) {
+      throw new Error("Usage: node sprint-manager.js add-repo <owner/repo>");
+    }
+    addRepo(repo);
+    return;
+  }
+
+  if (command === "list-repos") {
+    listRepos();
+    return;
+  }
+
+  if (command === "remove-repo") {
+    const repo = process.argv[3];
+    if (!repo) {
+      throw new Error("Usage: node sprint-manager.js remove-repo <owner/repo>");
+    }
+    removeRepo(repo);
+    return;
+  }
+
+  if (command === "show-backlog") {
+    showBacklog();
+    return;
+  }
+
+  if (command === "select") {
     const rawLimit = process.argv[3];
     const limit = Number(rawLimit);
 
