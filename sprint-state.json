@@ -2,10 +2,21 @@
   "generatedAt": "2026-05-06T17:21:46.630Z",
   "sprintId": "sprint-007",
   "sprintGoal": "",
-  "status": "planned",
-  "currentPhase": "planning",
+  "status": "active",
+  "currentPhase": "execution",
   "backlog": [],
-  "inProgress": [],
+  "inProgress": [
+    {
+      "id": "andresTNS/linux-push-to-talk#14",
+      "title": "Problemas al ingresar el dictado y pegarlo donde corresponde.",
+      "type": "story",
+      "priority": 50014,
+      "status": "in-progress",
+      "assignedRole": "product-owner",
+      "sourceStatus": "planned",
+      "startedAt": "2026-05-13T01:35:22.738Z"
+    }
+  ],
   "done": [],
   "impediments": [],
   "reviewNotes": [],
