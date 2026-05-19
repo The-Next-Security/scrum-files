@@ -14,7 +14,31 @@
       "status": "in-progress",
       "assignedRole": "product-owner",
       "sourceStatus": "planned",
-      "startedAt": "2026-05-13T01:35:22.738Z"
+      "startedAt": "2026-05-13T01:35:22.738Z",
+      "routingDecision": {
+        "appliedAt": "2026-05-17T23:52:52.635Z",
+        "assignedAgent": null,
+        "requiredSkills": [
+          "product-owner"
+        ],
+        "triggeredBy": [
+          "missing-severity"
+        ],
+        "confidence": "low",
+        "note": "Requires product-owner refinement: no severity label found"
+      },
+      "assignedAgent": null,
+      "requiredSkills": [
+        "product-owner"
+      ],
+      "prUrl": "https://github.com/andresTNS/linux-push-to-talk/pull/21",
+      "checksStatus": "pending",
+      "qaStatus": "failed",
+      "prOpenedAt": "2026-05-19T01:30:53.804Z",
+      "qaFailReason": "CHANGES_REQUESTED: Andrés pide revisar formato del mensaje y corregir tests/CI; CI Lint está fallando.",
+      "qaFailedAt": "2026-05-19T01:31:09.549Z",
+      "workerSessionId": "backend-dev-fix-pr-21",
+      "assignedAt": "2026-05-19T01:31:32.451Z"
     }
   ],
   "done": [],
