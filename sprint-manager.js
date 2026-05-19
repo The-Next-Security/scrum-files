@@ -322,6 +322,9 @@ function completeItem(itemId) {
   if (item.status === "blocked") {
     throw new Error(`Blocked item cannot be completed until unblocked: ${itemId}`);
   }
+  if (item.humanMergeStatus && item.humanMergeStatus !== "merged") {
+    console.log(`WARNING: completing item where humanMergeStatus=${item.humanMergeStatus}. Run human-merge first for full pipeline tracking.`);
+  }
 
   const [moved] = sprintState.inProgress.splice(index, 1);
   moved.status = "done";
@@ -581,6 +584,7 @@ function showSprint() {
   console.log(`inProgress: ${sprintState.inProgress.length}`);
   for (const item of sprintState.inProgress) {
     console.log(`- ${item.id} | ${item.title} | ${item.status}`);
+    showPipelineFields(item);
   }
 
   console.log("");
@@ -1376,6 +1380,230 @@ function showBacklog() {
   }
 }
 
+// ============================================================
+// PIPELINE TRACKING — R2 + R3: Router automático + Lifecycle extendido
+// ============================================================
+
+function computeRouting(fullItem) {
+  const labels = Array.isArray(fullItem.labels)
+    ? fullItem.labels.map(l => String(l).toLowerCase())
+    : [];
+  const title = String(fullItem.title || "").toLowerCase();
+  const hasSeverity = Boolean(fullItem.severity);
+  const hasBody = (fullItem.description || "").length > 80;
+
+  const isBug = labels.includes("bug") || title.includes("[bug]");
+  const isFrontend = labels.some(l =>
+    ["frontend", "ui", "react", "css", "componente", "component", "responsive"].includes(l)
+  );
+  const isBackend = labels.some(l =>
+    ["api", "backend", "cli", "db", "database", "service", "integración", "integration"].includes(l)
+  );
+  const isPerformance = labels.some(l =>
+    ["performance", "memory", "memory-leak", "event-loop", "node"].includes(l)
+  );
+
+  const baseSkills = ["git-expert", "documentation-expert", "qa-analyst"];
+  let assignedAgent = null;
+  const extraSkills = [];
+  const triggeredBy = [];
+
+  if (!hasSeverity) {
+    return {
+      appliedAt: new Date().toISOString(),
+      assignedAgent: null,
+      requiredSkills: ["product-owner"],
+      triggeredBy: ["missing-severity"],
+      confidence: "low",
+      note: "Requires product-owner refinement: no severity label found"
+    };
+  }
+
+  if (!hasBody) {
+    return {
+      appliedAt: new Date().toISOString(),
+      assignedAgent: null,
+      requiredSkills: ["product-owner"],
+      triggeredBy: ["missing-body"],
+      confidence: "low",
+      note: "Requires product-owner refinement: issue body is empty or too short"
+    };
+  }
+
+  if (isBug) triggeredBy.push("label:bug");
+
+  if (isPerformance) {
+    triggeredBy.push("label:performance");
+    assignedAgent = "backend-dev";
+    extraSkills.push("backend-developer", "node-specialist");
+    if (isBug) extraSkills.push("tns-debugger-triage");
+  } else if (isFrontend && !isBackend) {
+    triggeredBy.push("label:frontend");
+    assignedAgent = "frontend-dev";
+    extraSkills.push("frontend-developer");
+    if (isBug) extraSkills.push("tns-debugger-triage");
+  } else {
+    if (isBackend) triggeredBy.push("label:backend");
+    if (!isBackend && !isBug) triggeredBy.push("default");
+    assignedAgent = "backend-dev";
+    extraSkills.push("backend-developer");
+    if (isBug) extraSkills.push("tns-debugger-triage");
+  }
+
+  return {
+    appliedAt: new Date().toISOString(),
+    assignedAgent,
+    requiredSkills: [...new Set([...extraSkills, ...baseSkills])],
+    triggeredBy,
+    confidence: "high"
+  };
+}
+
+function findInSprintState(sprintState, itemId) {
+  const inBacklog = sprintState.backlog.find(i => i.id === itemId);
+  if (inBacklog) return { item: inBacklog, list: "backlog" };
+  const inProgress = sprintState.inProgress.find(i => i.id === itemId);
+  if (inProgress) return { item: inProgress, list: "inProgress" };
+  const inDone = sprintState.done.find(i => i.id === itemId);
+  if (inDone) return { item: inDone, list: "done" };
+  return null;
+}
+
+function routeItem(itemId) {
+  const sprintState = readJson(SPRINT_STATE_FILE);
+  const found = findInSprintState(sprintState, itemId);
+  if (!found) throw new Error(`Item not found in sprint state: ${itemId}`);
+
+  const productBacklog = readJson(PRODUCT_BACKLOG_FILE);
+  const fullItem = Array.isArray(productBacklog.items)
+    ? productBacklog.items.find(i => i.id === itemId)
+    : null;
+  if (!fullItem) throw new Error(`Item not found in product backlog: ${itemId}`);
+
+  const routing = computeRouting(fullItem);
+  found.item.routingDecision = routing;
+  found.item.assignedAgent = routing.assignedAgent;
+  found.item.requiredSkills = routing.requiredSkills;
+
+  fullItem.routingDecision = routing;
+  fullItem.assignedAgent = routing.assignedAgent;
+  fullItem.requiredSkills = routing.requiredSkills;
+
+  saveJson(SPRINT_STATE_FILE, sprintState);
+  saveJson(PRODUCT_BACKLOG_FILE, productBacklog);
+
+  console.log(`Item routed: ${itemId}`);
+  console.log(`assignedAgent: ${routing.assignedAgent || "none (needs product-owner first)"}`);
+  console.log(`requiredSkills: ${routing.requiredSkills.join(", ")}`);
+  console.log(`triggeredBy: ${routing.triggeredBy.join(", ")}`);
+  console.log(`confidence: ${routing.confidence}`);
+  if (routing.note) console.log(`note: ${routing.note}`);
+}
+
+function assignItem(itemId, sessionId) {
+  if (!itemId) throw new Error("Usage: node sprint-manager.js assign <ITEM_ID> [SESSION_ID]");
+  const sprintState = readJson(SPRINT_STATE_FILE);
+  const found = findInSprintState(sprintState, itemId);
+  if (!found) throw new Error(`Item not found in sprint state: ${itemId}`);
+
+  found.item.workerSessionId = sessionId || null;
+  found.item.assignedAt = new Date().toISOString();
+
+  saveJson(SPRINT_STATE_FILE, sprintState);
+  console.log(`Item assigned: ${itemId}`);
+  console.log(`workerSessionId: ${sessionId || "none"}`);
+}
+
+function prOpenItem(itemId, prUrl) {
+  if (!itemId || !prUrl) throw new Error("Usage: node sprint-manager.js pr-open <ITEM_ID> <PR_URL>");
+  const sprintState = readJson(SPRINT_STATE_FILE);
+  const found = findInSprintState(sprintState, itemId);
+  if (!found) throw new Error(`Item not found in sprint state: ${itemId}`);
+
+  found.item.prUrl = prUrl;
+  found.item.checksStatus = "pending";
+  if (!found.item.qaStatus) found.item.qaStatus = "pending";
+  found.item.prOpenedAt = new Date().toISOString();
+
+  saveJson(SPRINT_STATE_FILE, sprintState);
+  console.log(`PR registered: ${itemId}`);
+  console.log(`prUrl: ${prUrl}`);
+  console.log(`qaStatus: ${found.item.qaStatus}`);
+  console.log(`ACTION REQUIRED: Spawn qa-analyst to review this PR.`);
+}
+
+function qaPassItem(itemId, reviewUrl) {
+  if (!itemId) throw new Error("Usage: node sprint-manager.js qa-pass <ITEM_ID> [REVIEW_URL]");
+  const sprintState = readJson(SPRINT_STATE_FILE);
+  const found = findInSprintState(sprintState, itemId);
+  if (!found) throw new Error(`Item not found in sprint state: ${itemId}`);
+
+  found.item.qaStatus = "passed";
+  found.item.qaReviewUrl = reviewUrl || null;
+  found.item.qaPassedAt = new Date().toISOString();
+  if (!found.item.humanMergeStatus) found.item.humanMergeStatus = "pending";
+
+  saveJson(SPRINT_STATE_FILE, sprintState);
+  console.log(`QA passed: ${itemId}`);
+  console.log(`reviewUrl: ${reviewUrl || "none"}`);
+  console.log(`humanMergeStatus: ${found.item.humanMergeStatus}`);
+  console.log(`ACTION REQUIRED: Notify Felipe that ${itemId} is ready for human merge.`);
+}
+
+function qaFailItem(itemId, reason) {
+  if (!itemId || !reason) throw new Error('Usage: node sprint-manager.js qa-fail <ITEM_ID> "reason"');
+  const sprintState = readJson(SPRINT_STATE_FILE);
+  const found = findInSprintState(sprintState, itemId);
+  if (!found) throw new Error(`Item not found in sprint state: ${itemId}`);
+
+  found.item.qaStatus = "failed";
+  found.item.qaFailReason = reason;
+  found.item.qaFailedAt = new Date().toISOString();
+
+  saveJson(SPRINT_STATE_FILE, sprintState);
+  console.log(`QA failed: ${itemId}`);
+  console.log(`reason: ${reason}`);
+  console.log(`ACTION REQUIRED: Run tns-debugger-triage, then respawn worker with QA feedback.`);
+}
+
+function humanMergeItem(itemId) {
+  if (!itemId) throw new Error("Usage: node sprint-manager.js human-merge <ITEM_ID>");
+  const sprintState = readJson(SPRINT_STATE_FILE);
+  const found = findInSprintState(sprintState, itemId);
+  if (!found) throw new Error(`Item not found in sprint state: ${itemId}`);
+
+  if (found.item.qaStatus !== "passed") {
+    console.log(`WARNING: registering human-merge but qaStatus=${found.item.qaStatus || "not set"}. Proceed only if QA was confirmed outside the system.`);
+  }
+
+  found.item.humanMergeStatus = "merged";
+  found.item.mergedAt = new Date().toISOString();
+
+  saveJson(SPRINT_STATE_FILE, sprintState);
+  console.log(`Human merge recorded: ${itemId}`);
+  console.log(`mergedAt: ${found.item.mergedAt}`);
+  console.log(`Run: node sprint-manager.js complete ${itemId}`);
+}
+
+function showPipelineFields(item) {
+  const fields = ["assignedAgent", "workerSessionId", "prUrl", "qaStatus", "qaReviewUrl",
+    "qaFailReason", "checksStatus", "humanMergeStatus", "routingDecision"];
+  const present = fields.filter(f => item[f] !== undefined && item[f] !== null);
+  if (present.length === 0) return;
+  console.log(`  Pipeline:`);
+  if (item.assignedAgent) console.log(`    assignedAgent: ${item.assignedAgent}`);
+  if (item.workerSessionId) console.log(`    workerSessionId: ${item.workerSessionId}`);
+  if (item.prUrl) console.log(`    prUrl: ${item.prUrl}`);
+  if (item.qaStatus) console.log(`    qaStatus: ${item.qaStatus}${item.qaFailReason ? ` (${item.qaFailReason})` : ""}`);
+  if (item.qaReviewUrl) console.log(`    qaReviewUrl: ${item.qaReviewUrl}`);
+  if (item.checksStatus) console.log(`    checksStatus: ${item.checksStatus}`);
+  if (item.humanMergeStatus) console.log(`    humanMergeStatus: ${item.humanMergeStatus}`);
+  if (item.routingDecision) {
+    const rd = item.routingDecision;
+    console.log(`    routing: confidence=${rd.confidence} triggeredBy=${(rd.triggeredBy || []).join(",")}`);
+  }
+}
+
 function main() {
   const command = process.argv[2];
 
@@ -1548,6 +1776,47 @@ function main() {
 
   if (command === "next-sprint") {
     nextSprint();
+    return;
+  }
+
+  if (command === "route") {
+    const itemId = process.argv[3];
+    if (!itemId) throw new Error("Usage: node sprint-manager.js route <ITEM_ID>");
+    routeItem(itemId);
+    return;
+  }
+
+  if (command === "assign") {
+    const itemId = process.argv[3];
+    const sessionId = process.argv[4] || null;
+    assignItem(itemId, sessionId);
+    return;
+  }
+
+  if (command === "pr-open") {
+    const itemId = process.argv[3];
+    const prUrl = process.argv[4];
+    prOpenItem(itemId, prUrl);
+    return;
+  }
+
+  if (command === "qa-pass") {
+    const itemId = process.argv[3];
+    const reviewUrl = process.argv[4] || null;
+    qaPassItem(itemId, reviewUrl);
+    return;
+  }
+
+  if (command === "qa-fail") {
+    const itemId = process.argv[3];
+    const reason = process.argv.slice(4).join(" ").trim();
+    qaFailItem(itemId, reason);
+    return;
+  }
+
+  if (command === "human-merge") {
+    const itemId = process.argv[3];
+    humanMergeItem(itemId);
     return;
   }
 
