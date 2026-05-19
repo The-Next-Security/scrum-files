@@ -304,7 +304,23 @@
       "firstImport": true,
       "refinedAt": "2026-05-13T01:34:26.967Z",
       "sprintId": "sprint-007",
-      "startedAt": "2026-05-13T01:35:22.738Z"
+      "startedAt": "2026-05-13T01:35:22.738Z",
+      "routingDecision": {
+        "appliedAt": "2026-05-17T23:52:52.635Z",
+        "assignedAgent": null,
+        "requiredSkills": [
+          "product-owner"
+        ],
+        "triggeredBy": [
+          "missing-severity"
+        ],
+        "confidence": "low",
+        "note": "Requires product-owner refinement: no severity label found"
+      },
+      "assignedAgent": null,
+      "requiredSkills": [
+        "product-owner"
+      ]
     },
     {
       "id": "andresTNS/linux-push-to-talk#13",
