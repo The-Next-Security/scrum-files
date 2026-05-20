@@ -12,22 +12,28 @@
       "status": "active",
       "addedAt": "2026-05-11T19:51:35.573Z",
       "firstImportDone": true,
-      "lastImportAt": "2026-05-20T01:34:12.797Z"
+      "lastImportAt": "2026-05-20T17:01:19.120Z",
+      "priority": 2,
+      "priorityNote": ""
     },
     {
       "repo": "The-Next-Security/TNS_TRACK_DEMO",
       "status": "active",
       "addedAt": "2026-05-12T15:26:45.926Z",
       "firstImportDone": true,
-      "lastImportAt": "2026-05-20T01:34:13.687Z"
+      "lastImportAt": "2026-05-20T17:01:20.160Z",
+      "priority": 2,
+      "priorityNote": ""
     },
     {
       "repo": "andresTNS/snake-game",
       "status": "active",
       "addedAt": "2026-05-19T23:28:20.900Z",
       "firstImportDone": true,
-      "lastImportAt": "2026-05-20T01:34:14.531Z"
+      "lastImportAt": "2026-05-20T17:01:21.276Z",
+      "priority": 2,
+      "priorityNote": ""
     }
   ],
-  "updatedAt": "2026-05-20T01:34:14.534Z"
+  "updatedAt": "2026-05-20T17:01:21.278Z"
 }
