@@ -1393,12 +1393,15 @@ function computeRouting(fullItem) {
   const hasBody = (fullItem.description || "").length > 80;
 
   const isBug = labels.includes("bug") || title.includes("[bug]");
-  const isFrontend = labels.some(l =>
+  let isFrontend = labels.some(l =>
     ["frontend", "ui", "react", "css", "componente", "component", "responsive"].includes(l)
   );
-  const isBackend = labels.some(l =>
+  let isBackend = labels.some(l =>
     ["api", "backend", "cli", "db", "database", "service", "integración", "integration"].includes(l)
   );
+  // Campo detectedStack escrito por Roy antes de llamar a route (M1b)
+  if (fullItem.detectedStack === 'frontend') isFrontend = true;
+  if (fullItem.detectedStack === 'backend') isBackend = true;
   const isPerformance = labels.some(l =>
     ["performance", "memory", "memory-leak", "event-loop", "node"].includes(l)
   );
