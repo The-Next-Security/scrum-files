@@ -35,10 +35,10 @@
       "checksStatus": "pending",
       "qaStatus": "failed",
       "prOpenedAt": "2026-05-19T01:30:53.804Z",
-      "qaFailReason": "CHANGES_REQUESTED: Andrés pide revisar formato del mensaje y corregir tests/CI; CI Lint está fallando.",
-      "qaFailedAt": "2026-05-19T01:31:09.549Z",
+      "qaFailReason": "CHANGES_REQUESTED: Andrés pide corregir formato del PR/mensaje, resolver tests y conflictos en frontend_gui.py, install.sh y whisper-dictation.py",
+      "qaFailedAt": "2026-05-20T01:30:52.511Z",
       "workerSessionId": "backend-dev-fix-pr-21",
-      "assignedAt": "2026-05-19T01:31:32.451Z"
+      "assignedAt": "2026-05-20T01:31:12.999Z"
     }
   ],
   "done": [],
