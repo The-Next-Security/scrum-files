@@ -6,6 +6,7 @@ const TEAM_STATE_FILE = `${SCRUM_DIR}/team-state.json`;
 const SPRINT_STATE_FILE = `${SCRUM_DIR}/sprint-state.json`;
 const PRODUCT_BACKLOG_FILE = `${SCRUM_DIR}/product-backlog.json`;
 const REPOS_CATALOG_FILE = `${SCRUM_DIR}/repos-catalog.json`;
+const JOBS_FILE = "/root/.openclaw/cron/jobs.json";
 
 const SEVERITY_LABELS = [
   "severity: blocker",
@@ -1607,6 +1608,41 @@ function showPipelineFields(item) {
   }
 }
 
+function updateRepoPriority(repoFullName, priorityArg, note) {
+  const priority = parseInt(priorityArg, 10);
+  if (!Number.isInteger(priority) || priority < 1 || priority > 3) {
+    throw new Error("Priority must be 1 (alta), 2 (media), or 3 (baja)");
+  }
+  const catalog = readCatalog();
+  const repo = catalog.repos.find(r => r.repo === repoFullName);
+  if (!repo) {
+    throw new Error(`Repo not found in catalog: ${repoFullName}`);
+  }
+  repo.priority = priority;
+  repo.priorityNote = note || "";
+  saveCatalog(catalog);
+  const label = priority === 1 ? "alta" : priority === 2 ? "media" : "baja";
+  console.log(`priority-update OK: ${repoFullName} → priority=${priority} (${label})`);
+  if (note) console.log(`note: ${note}`);
+}
+
+function updateCapacity(nArg) {
+  const n = parseInt(nArg, 10);
+  if (!Number.isInteger(n) || n < 1) {
+    throw new Error("Usage: node sprint-manager.js capacity-update <positive-integer>");
+  }
+  if (!fs.existsSync(JOBS_FILE)) {
+    throw new Error(`Jobs file not found: ${JOBS_FILE}`);
+  }
+  const content = fs.readFileSync(JOBS_FILE, "utf8");
+  const updated = content.replace(/CAPACIDAD_SPRINT = \d+/, `CAPACIDAD_SPRINT = ${n}`);
+  if (updated === content) {
+    throw new Error("CAPACIDAD_SPRINT pattern not found in jobs.json");
+  }
+  fs.writeFileSync(JOBS_FILE, updated, "utf8");
+  console.log(`capacity-update OK: CAPACIDAD_SPRINT = ${n}`);
+}
+
 function main() {
   const command = process.argv[2];
 
@@ -1820,6 +1856,26 @@ function main() {
   if (command === "human-merge") {
     const itemId = process.argv[3];
     humanMergeItem(itemId);
+    return;
+  }
+
+  if (command === "priority-update") {
+    const repo = process.argv[3];
+    const priority = process.argv[4];
+    const note = process.argv.slice(5).join(" ").trim();
+    if (!repo || !priority) {
+      throw new Error('Usage: node sprint-manager.js priority-update <owner/repo> <1|2|3> ["note"]');
+    }
+    updateRepoPriority(repo, priority, note);
+    return;
+  }
+
+  if (command === "capacity-update") {
+    const n = process.argv[3];
+    if (!n) {
+      throw new Error("Usage: node sprint-manager.js capacity-update <positive-integer>");
+    }
+    updateCapacity(n);
     return;
   }
 
