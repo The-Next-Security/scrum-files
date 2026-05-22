@@ -282,7 +282,7 @@
       "type": "story",
       "priority": 50014,
       "severity": null,
-      "status": "in-progress",
+      "status": "done",
       "assignedRole": "product-owner",
       "description": "Imported from GitHub issue #14 in andresTNS/linux-push-to-talk.\nURL: https://github.com/andresTNS/linux-push-to-talk/issues/14\nLabels: none\nComments at import: 0\n\nConsiderando que inicié el programa de la siguiente manera:\n```bash\ndictate --key F9 --model tiny --language auto\n```\nY luego de copiar cosas que necesitaba realizar tanto mi trabajo. Se me copia lo que tenía con anterioridad en mi portapapeles, y no lo realizado durante el dictado. Y hay veces que funciona y hay veces que no, no es del todo fiable. Hay que crear el sistema que sea completamente robusto.",
       "definitionOfDone": [
@@ -320,7 +320,8 @@
       "assignedAgent": null,
       "requiredSkills": [
         "product-owner"
-      ]
+      ],
+      "completedAt": "2026-05-20T17:00:56.731Z"
     },
     {
       "id": "andresTNS/linux-push-to-talk#13",
@@ -490,7 +491,7 @@
       "type": "story",
       "priority": 40112,
       "severity": "severity: cosmetic",
-      "status": "imported",
+      "status": "planned",
       "assignedRole": "product-owner",
       "description": "Imported from GitHub issue #112 in The-Next-Security/TNS_TRACK_DEMO.\nURL: https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/112\nLabels: severity: cosmetic\nComments at import: 0\n\nTesting sprintId persistence after select",
       "definitionOfDone": [
@@ -511,7 +512,8 @@
       "createdAt": "2026-04-20T20:12:58Z",
       "updatedAt": "2026-05-12T15:28:25Z",
       "importedAt": "2026-05-13T01:30:29.786Z",
-      "firstImport": true
+      "firstImport": true,
+      "refinedAt": "2026-05-20T17:01:43.997Z"
     },
     {
       "id": "The-Next-Security/TNS_TRACK_DEMO#111",
@@ -519,7 +521,7 @@
       "type": "story",
       "priority": 40111,
       "severity": "severity: cosmetic",
-      "status": "imported",
+      "status": "planned",
       "assignedRole": "product-owner",
       "description": "Imported from GitHub issue #111 in The-Next-Security/TNS_TRACK_DEMO.\nURL: https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/111\nLabels: severity: cosmetic\nComments at import: 0\n\nCreated only to validate OpenClaw flow: import-github -> refine -> select -> start -> complete",
       "definitionOfDone": [
@@ -540,7 +542,8 @@
       "createdAt": "2026-04-20T19:51:56Z",
       "updatedAt": "2026-05-12T15:28:59Z",
       "importedAt": "2026-05-13T01:30:29.786Z",
-      "firstImport": true
+      "firstImport": true,
+      "refinedAt": "2026-05-20T17:01:50.125Z"
     },
     {
       "id": "The-Next-Security/TNS_TRACK_DEMO#83",
@@ -579,7 +582,7 @@
       "type": "bug",
       "priority": 10046,
       "severity": "severity: blocker",
-      "status": "imported",
+      "status": "in-progress",
       "assignedRole": "product-owner",
       "description": "Imported from GitHub issue #46 in The-Next-Security/TNS_TRACK_DEMO.\nURL: https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/46\nLabels: bug, IMPORTANT, dependencies, front-end, technical-debt, severity: blocker, severity: major\nComments at import: 1\n\n## Idea general\n\n`react-datepicker` usa `require()` dinámico internamente para cargar locales de `date-fns`, lo que webpack 5 reporta como warning \\\"Critical dependency: the request of a dependency is an expression\\\". El `ContextReplacementPlugin` existente para `date-fns/locale` no cubre este caso porque el warning proviene del código interno del paquete.\n\n## Solución temporal aplicada\n\nSe agregó `ignoreWarnings` en `webpack.config.js` para suprimir el warning mientras no se corrija en el paque...",
       "definitionOfDone": [
@@ -606,7 +609,10 @@
       "createdAt": "2026-03-16T20:46:01Z",
       "updatedAt": "2026-05-12T15:29:25Z",
       "importedAt": "2026-05-13T01:30:29.786Z",
-      "firstImport": true
+      "firstImport": true,
+      "refinedAt": "2026-05-20T17:01:30.476Z",
+      "sprintId": "sprint-007",
+      "startedAt": "2026-05-20T17:05:25.013Z"
     },
     {
       "id": "The-Next-Security/TNS_TRACK_DEMO#33",
@@ -700,7 +706,7 @@
       "type": "story",
       "priority": 20115,
       "severity": "severity: major",
-      "status": "imported",
+      "status": "in-progress",
       "assignedRole": "product-owner",
       "description": "Imported from GitHub issue #115 in The-Next-Security/TNS_TRACK_DEMO.\nURL: https://github.com/The-Next-Security/TNS_TRACK_DEMO/issues/115\nLabels: back-end, IMPORTANT, architecture, bug-prevention, dependencies, npm, refactoring, security, severity: major\nComments at import: 1\n\n## ♻️ Idea General\n\nRevisar y validar el estado actual del proyecto posterior al merge de las PR #104, #106, #108, #109 y #114, verificando que el servicio continúe compilando y funcionando correctamente.\n\nAdicionalmente, revisar las dependencias actuales para evaluar la factibilidad técnica de mergear la PR #110.\n\n## 🎯 Objetivo\n\nActualizar y revisar actualizaciones de dependencias. \n\n- [ ] **Mejorar legibilidad del código**\n- [ ] **Reducir complejidad ciclomática**\n- [ ] **Eliminar código dupl...",
       "definitionOfDone": [
@@ -729,7 +735,10 @@
       "createdAt": "2026-05-16T14:54:04Z",
       "updatedAt": "2026-05-16T15:06:33Z",
       "importedAt": "2026-05-17T20:41:47.852Z",
-      "firstImport": false
+      "firstImport": false,
+      "refinedAt": "2026-05-20T17:01:37.286Z",
+      "sprintId": "sprint-007",
+      "startedAt": "2026-05-20T17:05:34.283Z"
     },
     {
       "id": "andresTNS/linux-push-to-talk#22",
@@ -980,7 +989,7 @@
       "type": "story",
       "priority": 50003,
       "severity": null,
-      "status": "imported",
+      "status": "in-sprint",
       "assignedRole": "product-owner",
       "description": "Imported from GitHub issue #3 in andresTNS/snake-game.\nURL: https://github.com/andresTNS/snake-game/issues/3\nLabels: none\nComments at import: 0\n\n# Implementar sistema de comida y puntaje\n\n## Objetivo\n\nImplementar la lógica de generación de comida y sistema de puntaje.\n\n---\n\n## Alcance\n\n- Generar comida aleatoriamente\n- Detectar consumo de comida\n- Incrementar tamaño del Snake\n- Actualizar puntaje\n- Evitar generación de comida sobre el Snake\n\n---\n\n## Requisitos técnicos\n\n- Generación aleatoria válida\n- Sistema simple de score\n- Integración con modelo del Snake\n\n---\n\n## Criterios de aceptación\n\n- [ ] La comida aparece aleatoriamente\n- [ ] ...",
       "definitionOfDone": [
@@ -999,7 +1008,9 @@
       "createdAt": "2026-05-19T23:19:13Z",
       "updatedAt": "2026-05-19T23:21:59Z",
       "importedAt": "2026-05-20T01:31:35.977Z",
-      "firstImport": true
+      "firstImport": true,
+      "refinedAt": "2026-05-21T01:24:00.000Z",
+      "sprintId": "sprint-007"
     },
     {
       "id": "andresTNS/snake-game#2",
@@ -1007,7 +1018,7 @@
       "type": "story",
       "priority": 50002,
       "severity": null,
-      "status": "imported",
+      "status": "in-sprint",
       "assignedRole": "product-owner",
       "description": "Imported from GitHub issue #2 in andresTNS/snake-game.\nURL: https://github.com/andresTNS/snake-game/issues/2\nLabels: none\nComments at import: 0\n\n# Implementar modelo y lógica principal del Snake\n\n## Objetivo\n\nImplementar la lógica principal del Snake utilizando clases desacopladas de la interfaz gráfica.\n\n---\n\n## Alcance\n\n- Crear modelo del Snake\n- Implementar movimiento\n- Implementar crecimiento\n- Implementar dirección actual\n- Restringir movimientos inválidos\n- Mantener separación entre lógica y renderizado\n\n---\n\n## Requisitos técnicos\n\n- Uso de OOP simple\n- Código desacoplado de JavaFX\n- Movimiento basado en grilla\n- Snake compuesto p...",
       "definitionOfDone": [
@@ -1026,7 +1037,9 @@
       "createdAt": "2026-05-19T23:18:53Z",
       "updatedAt": "2026-05-19T23:21:38Z",
       "importedAt": "2026-05-20T01:31:35.977Z",
-      "firstImport": true
+      "firstImport": true,
+      "refinedAt": "2026-05-21T01:24:00.000Z",
+      "sprintId": "sprint-007"
     },
     {
       "id": "andresTNS/snake-game#1",
@@ -1034,7 +1047,7 @@
       "type": "story",
       "priority": 50001,
       "severity": null,
-      "status": "imported",
+      "status": "in-sprint",
       "assignedRole": "product-owner",
       "description": "Imported from GitHub issue #1 in andresTNS/snake-game.\nURL: https://github.com/andresTNS/snake-game/issues/1\nLabels: none\nComments at import: 0\n\n# Inicializar proyecto base JavaFX con arquitectura MVC\n\n## Objetivo\n\nCrear la estructura inicial del proyecto utilizando Java y JavaFX, dejando preparada una base mantenible y escalable para el desarrollo del juego Snake.\n\nEl proyecto debe seguir una estructura basada en MVC y OOP simple.\n\n---\n\n## Alcance\n\n- Crear proyecto Java desde cero\n- Configurar JavaFX\n- Configurar sistema de build (Gradle o Maven)\n- Crear estructura inicial MVC\n- Crear ventana principal funcional\n- Validar ejecución loca...",
       "definitionOfDone": [
@@ -1053,7 +1066,9 @@
       "createdAt": "2026-05-19T23:18:29Z",
       "updatedAt": "2026-05-19T23:21:12Z",
       "importedAt": "2026-05-20T01:31:35.977Z",
-      "firstImport": true
+      "firstImport": true,
+      "refinedAt": "2026-05-21T01:24:00.000Z",
+      "sprintId": "sprint-007"
     }
   ]
 }

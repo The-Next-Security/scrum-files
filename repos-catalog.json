@@ -12,7 +12,7 @@
       "status": "active",
       "addedAt": "2026-05-11T19:51:35.573Z",
       "firstImportDone": true,
-      "lastImportAt": "2026-05-20T17:01:19.120Z",
+      "lastImportAt": "2026-05-22T01:31:47.358Z",
       "priority": 2,
       "priorityNote": ""
     },
@@ -21,7 +21,7 @@
       "status": "active",
       "addedAt": "2026-05-12T15:26:45.926Z",
       "firstImportDone": true,
-      "lastImportAt": "2026-05-20T17:01:20.160Z",
+      "lastImportAt": "2026-05-22T01:31:48.520Z",
       "priority": 2,
       "priorityNote": ""
     },
@@ -30,10 +30,10 @@
       "status": "active",
       "addedAt": "2026-05-19T23:28:20.900Z",
       "firstImportDone": true,
-      "lastImportAt": "2026-05-20T17:01:21.276Z",
-      "priority": 2,
-      "priorityNote": ""
+      "lastImportAt": "2026-05-22T01:31:49.334Z",
+      "priority": 1,
+      "priorityNote": "Felipe: prioridad máxima; repo único a priorizar en el sprint, sin arranque automático de workers. Movido al frente del backlog activo el 2026-05-21."
     }
   ],
-  "updatedAt": "2026-05-20T17:01:21.278Z"
+  "updatedAt": "2026-05-22T01:31:49.336Z"
 }
