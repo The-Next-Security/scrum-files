@@ -1,0 +1,212 @@
+[
+  {
+    "skillId": "agent-dispatch",
+    "status": "active",
+    "route": "roy-direct",
+    "ownerAgent": "roy",
+    "triggers": ["spawn-worker", "spawn-qa", "spawn-specialist"],
+    "requiredBefore": ["sessions_spawn"],
+    "outputs": ["spawnPrompt", "auditEntry"],
+    "fallback": null,
+    "riskLevel": "high"
+  },
+  {
+    "skillId": "product-owner",
+    "status": "active",
+    "route": "roy-direct",
+    "ownerAgent": "roy",
+    "triggers": ["issue-vague", "missing-acceptance-criteria", "backlog-refinement", "sprint-planning"],
+    "requiredBefore": ["spawn-worker"],
+    "outputs": ["miniSpec", "acceptanceCriteria", "routingRecommendation"],
+    "fallback": null,
+    "riskLevel": "low"
+  },
+  {
+    "skillId": "scrum-master",
+    "status": "active",
+    "route": "roy-direct",
+    "ownerAgent": "roy",
+    "triggers": ["sprint-planning", "sprint-review", "sprint-retrospective", "blocker-detected"],
+    "requiredBefore": [],
+    "outputs": ["sprintPlan", "retroNotes", "impedimentResolution"],
+    "fallback": null,
+    "riskLevel": "low"
+  },
+  {
+    "skillId": "tns-scrum-daily-standup",
+    "status": "active",
+    "route": "roy-direct",
+    "ownerAgent": "roy",
+    "triggers": ["cron:daily-standup"],
+    "requiredBefore": [],
+    "outputs": ["dailyReport", "telegramMessage"],
+    "fallback": null,
+    "riskLevel": "low"
+  },
+  {
+    "skillId": "tns-debugger-triage",
+    "status": "active",
+    "route": "roy-direct",
+    "ownerAgent": "roy",
+    "triggers": ["label:bug", "qa-failed", "ci-failed", "worker-failed"],
+    "requiredBefore": ["respawn-worker"],
+    "outputs": ["rcaReport"],
+    "fallback": null,
+    "riskLevel": "medium"
+  },
+  {
+    "skillId": "node-specialist",
+    "status": "active",
+    "route": "roy-direct",
+    "ownerAgent": "roy",
+    "triggers": ["label:performance", "label:memory-leak", "label:event-loop", "label:node", "sigsegv", "oom"],
+    "requiredBefore": [],
+    "outputs": ["nodeAnalysisReport"],
+    "fallback": "tns-debugger-triage",
+    "riskLevel": "medium"
+  },
+  {
+    "skillId": "coding-agent",
+    "status": "active",
+    "route": "roy-direct",
+    "ownerAgent": "roy",
+    "triggers": ["ad-hoc-script", "repo-read", "quick-check"],
+    "requiredBefore": [],
+    "outputs": ["scriptOutput"],
+    "fallback": null,
+    "riskLevel": "medium"
+  },
+  {
+    "skillId": "ux-developer",
+    "status": "active",
+    "route": "roy-direct",
+    "ownerAgent": "roy",
+    "triggers": ["label:ui", "label:ux", "flow-proposal", "wireframe-request"],
+    "requiredBefore": [],
+    "outputs": ["uxProposal", "markdownWireframe"],
+    "fallback": null,
+    "riskLevel": "low"
+  },
+  {
+    "skillId": "github-manager",
+    "status": "active",
+    "route": "roy-direct",
+    "ownerAgent": "roy",
+    "triggers": ["import-github", "label-sync", "routing-decision", "qa-result-writeback", "pr-comment"],
+    "requiredBefore": [],
+    "outputs": ["githubEvent", "commentUrl", "labelState"],
+    "fallback": null,
+    "riskLevel": "medium"
+  },
+  {
+    "skillId": "backend-developer",
+    "status": "active",
+    "route": "worker-delegated",
+    "ownerAgent": "backend-dev",
+    "triggers": ["label:backend", "label:api", "label:db", "label:service", "label:cli", "label:integración"],
+    "requiredBefore": [],
+    "outputs": ["pr", "commitHistory"],
+    "fallback": null,
+    "riskLevel": "medium"
+  },
+  {
+    "skillId": "frontend-developer",
+    "status": "active",
+    "route": "worker-delegated",
+    "ownerAgent": "frontend-dev",
+    "triggers": ["label:frontend", "label:ui", "label:react", "label:css", "label:componente"],
+    "requiredBefore": [],
+    "outputs": ["pr", "commitHistory"],
+    "fallback": null,
+    "riskLevel": "medium"
+  },
+  {
+    "skillId": "qa-analyst",
+    "status": "active",
+    "route": "worker-delegated",
+    "ownerAgent": "qa-analyst",
+    "triggers": ["pr-open", "pr-ready-for-review"],
+    "requiredBefore": ["human-merge"],
+    "outputs": ["githubReview", "qaReport", "qaStatus"],
+    "fallback": null,
+    "riskLevel": "low"
+  },
+  {
+    "skillId": "git-expert",
+    "status": "active",
+    "route": "worker-delegated",
+    "ownerAgent": "backend-dev",
+    "triggers": ["merge-conflict", "rebase-needed", "cherry-pick", "squash-before-pr"],
+    "requiredBefore": [],
+    "outputs": ["cleanBranch", "resolvedConflict"],
+    "fallback": null,
+    "riskLevel": "high"
+  },
+  {
+    "skillId": "documentation-expert",
+    "status": "active",
+    "route": "worker-delegated",
+    "ownerAgent": "backend-dev",
+    "triggers": ["pr-close", "readme-update", "changelog-update", "docstring-needed"],
+    "requiredBefore": [],
+    "outputs": ["updatedDocs", "changelog"],
+    "fallback": null,
+    "riskLevel": "low"
+  },
+  {
+    "skillId": "governance-wrapper",
+    "status": "active",
+    "route": "passive-governance",
+    "ownerAgent": null,
+    "triggers": ["always-on"],
+    "requiredBefore": [],
+    "outputs": ["allowDecision", "blockDecision", "escalateDecision"],
+    "fallback": null,
+    "riskLevel": "low"
+  },
+  {
+    "skillId": "agent-audit-trail",
+    "status": "active",
+    "route": "passive-governance",
+    "ownerAgent": null,
+    "triggers": ["always-on"],
+    "requiredBefore": [],
+    "outputs": ["auditLog"],
+    "fallback": null,
+    "riskLevel": "low"
+  },
+  {
+    "skillId": "giraffe-guard",
+    "status": "active",
+    "route": "passive-governance",
+    "ownerAgent": null,
+    "triggers": ["always-on", "loop-detected", "runaway-detected"],
+    "requiredBefore": [],
+    "outputs": ["stopSignal"],
+    "fallback": null,
+    "riskLevel": "low"
+  },
+  {
+    "skillId": "skill-threat-scanner",
+    "status": "active",
+    "route": "passive-governance",
+    "ownerAgent": null,
+    "triggers": ["new-skill-detected", "skill-change-detected"],
+    "requiredBefore": ["use-new-skill"],
+    "outputs": ["threatReport", "blockDecision"],
+    "fallback": null,
+    "riskLevel": "low"
+  },
+  {
+    "skillId": "tns-track-deployer",
+    "status": "disabled-intentional",
+    "route": null,
+    "ownerAgent": null,
+    "triggers": [],
+    "requiredBefore": [],
+    "outputs": [],
+    "fallback": null,
+    "riskLevel": "high",
+    "reason": "Scaffold de verticals TNS Track. Sin entorno de deploy seguro configurado en v1. Activar cuando Felipe autorice cliente específico con parámetros de deployment validados."
+  }
+]
