@@ -1,23 +1,109 @@
 {
   "generatedAt": "2026-05-06T17:21:46.630Z",
   "sprintId": "sprint-007",
-  "sprintGoal": "",
+  "sprintGoal": "Prioridad máxima: avanzar andresTNS/snake-game desde base JavaFX hasta lógica inicial, sin iniciar workers automáticamente.",
   "status": "active",
   "currentPhase": "execution",
-  "backlog": [],
+  "backlog": [
+    {
+      "id": "andresTNS/snake-game#1",
+      "title": "Inicializar proyecto base JavaFX con arquitectura MVC",
+      "type": "story",
+      "priority": 50001,
+      "status": "in-sprint",
+      "assignedRole": "product-owner",
+      "sourceStatus": "imported"
+    },
+    {
+      "id": "andresTNS/snake-game#2",
+      "title": "Implementar modelo y lógica principal del Snake",
+      "type": "story",
+      "priority": 50002,
+      "status": "in-sprint",
+      "assignedRole": "product-owner",
+      "sourceStatus": "imported"
+    },
+    {
+      "id": "andresTNS/snake-game#3",
+      "title": "Implementar sistema de comida y puntaje",
+      "type": "story",
+      "priority": 50003,
+      "status": "in-sprint",
+      "assignedRole": "product-owner",
+      "sourceStatus": "imported"
+    }
+  ],
   "inProgress": [
+    {
+      "id": "The-Next-Security/TNS_TRACK_DEMO#46",
+      "title": "[BUG] Warning Critical dependency en react-datepicker por require() dinámico",
+      "type": "bug",
+      "priority": 10046,
+      "status": "in-progress",
+      "assignedRole": "product-owner",
+      "sourceStatus": "planned",
+      "startedAt": "2026-05-20T17:05:25.013Z",
+      "workerSessionId": "backend-dev-fix-pr-121",
+      "assignedAt": "2026-05-22T01:31:40.117Z",
+      "prUrl": "https://github.com/The-Next-Security/TNS_TRACK_DEMO/pull/121",
+      "checksStatus": "pending",
+      "qaStatus": "failed",
+      "prOpenedAt": "2026-05-21T01:30:41.110Z",
+      "qaFailReason": "CI failures: claude-review, ESLint/Prettier/Build, Validar Formato de Commits. Comentario Bufigol: alinear dependencias con merges #116-#120 e incluir validación compatible con #115 antes de aprobar.",
+      "qaFailedAt": "2026-05-22T01:31:08.335Z"
+    },
+    {
+      "id": "The-Next-Security/TNS_TRACK_DEMO#115",
+      "title": "[REFACTOR] Validar compatibilidad de dependencias posterior a merges recientes",
+      "type": "story",
+      "priority": 20115,
+      "status": "in-progress",
+      "assignedRole": "product-owner",
+      "sourceStatus": "planned",
+      "startedAt": "2026-05-20T17:05:34.283Z",
+      "workerSessionId": "backend-dev-issue-115",
+      "assignedAt": "2026-05-20T17:08:56.234Z"
+    }
+  ],
+  "done": [
     {
       "id": "andresTNS/linux-push-to-talk#14",
       "title": "Problemas al ingresar el dictado y pegarlo donde corresponde.",
       "type": "story",
       "priority": 50014,
-      "status": "in-progress",
+      "status": "done",
       "assignedRole": "product-owner",
       "sourceStatus": "planned",
-      "startedAt": "2026-05-13T01:35:22.738Z"
+      "startedAt": "2026-05-13T01:35:22.738Z",
+      "routingDecision": {
+        "appliedAt": "2026-05-17T23:52:52.635Z",
+        "assignedAgent": null,
+        "requiredSkills": [
+          "product-owner"
+        ],
+        "triggeredBy": [
+          "missing-severity"
+        ],
+        "confidence": "low",
+        "note": "Requires product-owner refinement: no severity label found"
+      },
+      "assignedAgent": null,
+      "requiredSkills": [
+        "product-owner"
+      ],
+      "prUrl": "https://github.com/andresTNS/linux-push-to-talk/pull/21",
+      "checksStatus": "pending",
+      "qaStatus": "failed",
+      "prOpenedAt": "2026-05-19T01:30:53.804Z",
+      "qaFailReason": "CHANGES_REQUESTED: Andrés pide corregir formato del PR/mensaje, resolver tests y conflictos en frontend_gui.py, install.sh y whisper-dictation.py",
+      "qaFailedAt": "2026-05-20T01:30:52.511Z",
+      "workerSessionId": "backend-dev-fix-pr-21",
+      "assignedAt": "2026-05-20T01:31:12.999Z",
+      "humanMergeStatus": "merged",
+      "mergedAt": "2026-05-20T17:00:44.536Z",
+      "completedAt": "2026-05-20T17:00:56.731Z"
     }
   ],
-  "done": [],
   "impediments": [],
   "reviewNotes": [],
   "retrospectiveNotes": []
